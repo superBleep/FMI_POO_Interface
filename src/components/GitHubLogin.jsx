@@ -1,4 +1,6 @@
 import { useEffect } from "react"
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
+import { faGithub } from "@fortawesome/free-brands-svg-icons"
 const CLIENT_ID = "e74bc2c6cfd51906ab93" // client id for the GitHub oauth application
 export default function GitHubLogin() {
     useEffect(() => {
@@ -15,6 +17,8 @@ export default function GitHubLogin() {
     return (
         <>
         <button className='btn btn-primary' onClick={loginWithGithub}>
+            <FontAwesomeIcon icon={faGithub}/>
+            
             Login with GitHub
         </button>
         </>
