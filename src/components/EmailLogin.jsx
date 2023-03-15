@@ -35,9 +35,11 @@ export default function EmailLogin() {
                 <Form.Check type='checkbox' label='Ține-mă minte' />
             </Form.Group>
 
-            <Button variant='primary' type='submit'>
+            <Button className='w-100' variant='primary' type='submit'>
                 Login
             </Button>
+
+            <hr></hr>
         </Form>
     )
 }

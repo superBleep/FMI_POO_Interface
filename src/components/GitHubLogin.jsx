@@ -63,9 +63,9 @@ export default function GitHubLogin() {
     <>
       {login === true &&
       <p>user is logged in!</p>}
-      <button className="btn btn-primary" onClick={loginWithGithub}>
+      <button className="btn btn-primary w-100" onClick={loginWithGithub}>
         <FontAwesomeIcon icon={faGithub} />
-        Login with GitHub
+        &nbsp; Login with GitHub
       </button>
     </>
   );
