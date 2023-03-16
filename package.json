@@ -1,5 +1,4 @@
 {
-  "proxy": "http://localhost:5731",
   "name": "fmi_poo_interface",
   "private": true,
   "version": "0.0.0",
@@ -17,10 +16,13 @@
     "bootstrap": "^5.2.3",
     "express": "^4.18.2",
     "nodemon": "^2.0.21",
+    "pg": "^8.10.0",
+    "pg-hstore": "^2.3.4",
     "react": "^18.2.0",
     "react-bootstrap": "^2.7.2",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.8.2",
+    "sequelize": "^6.29.3",
     "vite-express": "^0.4.2"
   },
   "devDependencies": {
