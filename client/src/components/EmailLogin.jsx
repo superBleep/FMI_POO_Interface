@@ -6,23 +6,34 @@ import { domain, backendPort } from '../services/constants'
 
 const backendLink = `http://${domain}:${backendPort}`
 
-export default function EmailLogin() {
-    const loginHandler = event => {
-        event.preventDefault();
+async function loginUserEmail(credentials) {
+    return fetch(`${backendLink}/email-login`, {
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        mode: 'cors',
+        method: 'POST',
+        body: JSON.stringify(credentials)
+    })
+    .then(res => res.json())
+} 
+
+export default function EmailLogin({ setToken }) {
+    const loginHandler = async event => {
+        event.preventDefault()
 
         const credentials = {
             email: event.target.login_email.value,
             pass: event.target.login_pass.value
         }
+        const token = await loginUserEmail(credentials)
 
-        fetch(`${backendLink}/email-login`, {
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            mode: 'cors',
-            method: 'POST',
-            body: JSON.stringify(credentials)
-        })
+        if(!token.error) {
+            setToken(token)
+        }
+        else {
+            console.log("User not found!")
+        }
     }
 
     return (
