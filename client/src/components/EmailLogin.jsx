@@ -2,23 +2,27 @@ import Form from 'react-bootstrap/Form';
 import Button from 'react-bootstrap/Button';
 import FloatingLabel from 'react-bootstrap/FloatingLabel';
 
+import { domain, backendPort } from '../services/constants'
+
+const backendLink = `http://${domain}:${backendPort}`
+
 export default function EmailLogin() {
     const loginHandler = event => {
         event.preventDefault();
 
-        const hardcodedUsers = {
-            "ionescu.pop@s.unibuc.ro": 1234,
-            "popescu.ion@s.unibuc.ro": 12345
+        const credentials = {
+            email: event.target.login_email.value,
+            pass: event.target.login_pass.value
         }
 
-        const emailInput = event.target.login_email;
-        const passInput = event.target.login_pass;
-
-        for(let key in hardcodedUsers) {
-            if(key == emailInput && hardcodedUsers[key] == passInput) {
-                
-            }
-        }
+        fetch(`${backendLink}/email-login`, {
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            mode: 'cors',
+            method: 'POST',
+            body: JSON.stringify(credentials)
+        })
     }
 
     return (
