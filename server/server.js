@@ -1,9 +1,17 @@
+import dotenv from 'dotenv'
+import { dirname, resolve } from 'path'
+import { fileURLToPath } from 'url'
 import express from 'express'
 import cors from 'cors'
 import { admin, dbUser, student } from './sequelizeModels.js'
 
+const __dirname = dirname(fileURLToPath(import.meta.url))
+dotenv.config({
+    path: resolve(__dirname + '/../.env')
+})
+
 const app = express()
-const port = 5000
+const port = process.env.BACKEND_PORT
 
 app.use(cors("*"))
 app.use(express.json())

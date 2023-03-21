@@ -1,6 +1,14 @@
+import dotenv from 'dotenv'
+import { dirname, resolve } from 'path'
+import { fileURLToPath } from 'url'
 import { Sequelize, DataTypes } from 'sequelize'
 
-export const sequelize = new Sequelize('postgres://fmi_app_db_admin:wLz*4p4M!dU9K$@localhost:5432/fmi_app_db', {logging: false})
+const __dirname = dirname(fileURLToPath(import.meta.url))
+dotenv.config({
+    path: resolve(__dirname + '/../.env')
+})
+
+export const sequelize = new Sequelize(process.env.DATABASE_LOGIN, {logging: false})
 
 export const dbUser = sequelize.define('dbUser', {
     surname: {
