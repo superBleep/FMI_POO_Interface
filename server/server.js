@@ -3,6 +3,7 @@ import { dirname, resolve } from 'path'
 import { fileURLToPath } from 'url'
 import express from 'express'
 import cors from 'cors'
+import session from 'express-session'
 import { admin, dbUser, student } from './sequelizeModels.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
@@ -15,6 +16,14 @@ const port = process.env.BACKEND_PORT
 
 app.use(cors("*"))
 app.use(express.json())
+app.use(
+    session({
+        key: "sid",
+        secret: process.env.SESSION_SECRET,
+        resave: false,
+        saveUninitialized: true
+    })
+)
 
 app.post('/email-login', async (req, res) => {
     let userObj = (await dbUser.findOne({
@@ -38,13 +47,16 @@ app.post('/email-login', async (req, res) => {
         }))
 
         if(studentObj) {
-            res.json(Object.assign(studentObj.dataValues, userObj.dataValues))
+            req.session.userData = Object.assign(studentObj.dataValues, userObj.dataValues)
+            res.send([req.session.userData, req.sessionID])
         }
         else if(adminObj) {
-            res.json(Object.assign(adminObj.dataValues, userObj.dataValues))
+            req.session.userData = Object.assign(studentObj.dataValues, userObj.dataValues)
+            res.send([req.session.userData, req.sessionID])
         }
         else {
-            res.json({error: "User not found"})
+            // to be implemented in frontend
+            res.send('error')
         }
     } 
     else {

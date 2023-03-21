@@ -2,9 +2,7 @@ import Form from 'react-bootstrap/Form';
 import Button from 'react-bootstrap/Button';
 import FloatingLabel from 'react-bootstrap/FloatingLabel';
 
-import { domain, backendPort } from '../services/constants'
-
-const backendLink = `http://${domain}:${backendPort}`
+const backendLink = `http://${import.meta.env.VITE_DOMAIN}:${import.meta.env.VITE_BACKEND_PORT}`
 
 async function loginUserEmail(credentials) {
     return fetch(`${backendLink}/email-login`, {
@@ -15,7 +13,7 @@ async function loginUserEmail(credentials) {
         method: 'POST',
         body: JSON.stringify(credentials)
     })
-    .then(res => res.json())
+    .then(res => res)
 } 
 
 export default function EmailLogin({ setToken }) {
@@ -27,6 +25,7 @@ export default function EmailLogin({ setToken }) {
             pass: event.target.login_pass.value
         }
         const token = await loginUserEmail(credentials)
+        console.log(token)
 
         if(!token.error) {
             setToken(token)
