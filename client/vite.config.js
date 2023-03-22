@@ -12,5 +12,6 @@ export default defineConfig({
   plugins: [react()],
   server: {
     port: process.env.FRONTEND_PORT
-  }
+  },
+  envDir: './..'
 })

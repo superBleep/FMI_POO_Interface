@@ -48,19 +48,25 @@ app.post('/email-login', async (req, res) => {
 
         if(studentObj) {
             req.session.userData = Object.assign(studentObj.dataValues, userObj.dataValues)
-            res.send([req.session.userData, req.sessionID])
+            res.send({
+                userData: req.session.userData,
+                userSID: req.sessionID
+            })
         }
         else if(adminObj) {
             req.session.userData = Object.assign(studentObj.dataValues, userObj.dataValues)
-            res.send([req.session.userData, req.sessionID])
+            res.send({
+                userData: req.session.userData,
+                userSID: req.sessionID
+            })
         }
         else {
             // to be implemented in frontend
-            res.send('error')
+            res.send({})
         }
     } 
     else {
-        res.json({error: "User not found"})
+        res.send({})
     }
 })
 

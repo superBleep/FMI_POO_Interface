@@ -13,7 +13,7 @@ async function loginUserEmail(credentials) {
         method: 'POST',
         body: JSON.stringify(credentials)
     })
-    .then(res => res)
+    .then(res => res.json())
 } 
 
 export default function EmailLogin({ setToken }) {
@@ -25,10 +25,9 @@ export default function EmailLogin({ setToken }) {
             pass: event.target.login_pass.value
         }
         const token = await loginUserEmail(credentials)
-        console.log(token)
 
-        if(!token.error) {
-            setToken(token)
+        if(Object.keys(token).length != 0) {
+            setToken(token.userSID)
         }
         else {
             console.log("User not found!")
