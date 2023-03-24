@@ -16,20 +16,24 @@ async function loginUserEmail(credentials) {
     .then(res => res.json())
 } 
 
-export default function EmailLogin({ setToken }) {
+export default function EmailLogin({ setToken, setUserData }) {
     const loginHandler = async event => {
         event.preventDefault()
 
         const credentials = {
             email: event.target.login_email.value,
-            pass: event.target.login_pass.value
+            pass: event.target.login_pass.value,
+            remember: event.target.login_remember.checked
         }
-        const token = await loginUserEmail(credentials)
+        const loginRes = await loginUserEmail(credentials)
+        console.log(loginRes)
 
-        if(Object.keys(token).length != 0) {
-            setToken(token.userSID)
+        if(Object.keys(loginRes).length != 0) {
+            setToken(loginRes.userSID)
+            setUserData(loginRes.userData)
         }
         else {
+            // to be implemented
             console.log("User not found!")
         }
     }
@@ -44,7 +48,7 @@ export default function EmailLogin({ setToken }) {
                 <Form.Control type='password' placeholder='Parolă' />
             </FloatingLabel>
 
-            <Form.Group controlId='login-remember' className='mb-3'>
+            <Form.Group controlId='login_remember' className='mb-3'>
                 <Form.Check type='checkbox' label='Ține-mă minte' />
             </Form.Group>
 

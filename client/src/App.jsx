@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { React, useState } from 'react';
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 
 import Dashboard from './pages/Dashboard'
@@ -8,6 +8,7 @@ import useToken from './services/useToken'
 
 export default function App() {
 	const { token, setToken } = useToken()
+	const { userData, setUserData } = useState()
 
 	if(!token) {
 		return (

@@ -4,6 +4,8 @@ import { fileURLToPath } from 'url'
 import express from 'express'
 import cors from 'cors'
 import session from 'express-session'
+import redis from 'redis'
+import RedisStore from 'connect-redis'
 import { admin, dbUser, student } from './sequelizeModels.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
@@ -14,11 +16,28 @@ dotenv.config({
 const app = express()
 const port = process.env.BACKEND_PORT
 
-app.use(cors("*"))
+const redisClient = redis.createClient({
+    host: process.env.REDIS_HOST,
+    port: process.env.REDIS_PORT
+})
+redisClient.connect().catch(console.error)
+const redisStore = new RedisStore({
+    client: redisClient,
+    prefix: "fmiapp:",
+})
+
+redisClient.on('error', err => {
+    console.error('Redis error: ' + err)
+})
+redisClient.on('connect', err => {
+    console.log('Connected to Redis')
+})
+
+app.use(cors())
 app.use(express.json())
 app.use(
     session({
-        key: "sid",
+        store: redisStore,
         secret: process.env.SESSION_SECRET,
         resave: false,
         saveUninitialized: true
@@ -26,6 +45,13 @@ app.use(
 )
 
 app.post('/email-login', async (req, res) => {
+    let hour = 3600000
+    if(req.body.remember) {
+        req.session.cookie.maxAge = 5 * 24 * hour // 5 days
+    } else {
+        req.session.cookie.maxAge = hour / 2 // 30 min
+    }
+
     let userObj = (await dbUser.findOne({
         where: {
             email: req.body.email,
@@ -54,18 +80,19 @@ app.post('/email-login', async (req, res) => {
             })
         }
         else if(adminObj) {
-            req.session.userData = Object.assign(studentObj.dataValues, userObj.dataValues)
+            req.session.userData = Object.assign(adminObj.dataValues, userObj.dataValues)
             res.send({
                 userData: req.session.userData,
                 userSID: req.sessionID
             })
         }
         else {
-            // to be implemented in frontend
+            // to be implemented
             res.send({})
         }
     } 
     else {
+        // to be implemented
         res.send({})
     }
 })
@@ -73,5 +100,5 @@ app.post('/email-login', async (req, res) => {
 app.listen(port, "localhost", err => {
     if (err)
         console.error("Failed to setup server:", err)
-    console.log("Server started on port " + port + "...")
+    console.log("Server started on port " + port)
 })

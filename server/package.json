@@ -9,12 +9,14 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "connect-redis": "^7.0.1",
     "cors": "^2.8.5",
     "dotenv": "^16.0.3",
     "express": "^4.18.2",
     "express-session": "^1.17.3",
     "pg": "^8.10.0",
     "pg-hstore": "^2.3.4",
+    "redis": "^4.6.5",
     "sequelize": "^6.29.3"
   }
 }
