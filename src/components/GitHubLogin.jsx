@@ -2,9 +2,7 @@ import { useEffect, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faGithub } from "@fortawesome/free-brands-svg-icons";
 const CLIENT_ID = import.meta.env.VITE_CLIENT_ID;   
-export default function GitHubLogin() {
-  const [login, setLogin] = useState(false);
-  const [userData, setUserData] = useState(null);
+export default function GitHubLogin({callback}) {
   useEffect(() => {
     const queryString = window.location.search;
     const urlParams = new URLSearchParams(queryString);
@@ -38,18 +36,18 @@ export default function GitHubLogin() {
           // daca contul de github nu este in baza de date, loginul a esuat
           const allowedUsers = ['test1','test2', 'alex-toma0']
           if (!allowedUsers.includes(data.login)) {
+            localStorage.removeItem("accessToken");
             window.alert("Contul nu este in baza de date! Loginul a esuat!");
           }
           else {
-            setLogin(true);
-            setUserData(data);
+            callback(data);
           }
         });
       }
       getUserData();
       
     } 
-  }, [userData,login]);
+  }, []);
 
 
   let loginWithGithub = () => {
@@ -60,8 +58,6 @@ export default function GitHubLogin() {
   };
   return (
     <>
-      {login === true &&
-      <p> {userData["login"]} is logged in!</p>}
       <button className="btn btn-primary" onClick={loginWithGithub}>
         <FontAwesomeIcon icon={faGithub} />
         Login with GitHub

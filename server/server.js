@@ -35,7 +35,6 @@ app.get('/getUserData', async function (req, res) {
     })
         .then((response) => response.json())
         .then((data) => {
-            console.log(data);
             res.json(data);
     });
 });
