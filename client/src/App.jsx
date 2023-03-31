@@ -1,19 +1,23 @@
-import { React, useState } from 'react';
+import { React, useEffect } from 'react';
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 
 import Dashboard from './pages/Dashboard'
 import Login from './components/Login'
 import { generalStyle } from './services/constants'
-import useToken from './services/useToken'
+
+import useLoggedIn from './services/useLoggedIn';
+
+const backendLink = `http://${import.meta.env.VITE_DOMAIN}:${import.meta.env.VITE_BACKEND_PORT}`
 
 export default function App() {
-	const { token, setToken } = useToken()
-	const { userData, setUserData } = useState()
+	const { loggedIn, setLoggedIn } = useLoggedIn()
 
-	if(!token) {
+	console.log(loggedIn)
+
+	if(!loggedIn) {
 		return (
 			<div style={generalStyle}>
-				<Login setToken={setToken} />
+				<Login setLoggedIn = {setLoggedIn} />
 			</div>
 		)
 	}

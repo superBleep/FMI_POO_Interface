@@ -23,7 +23,7 @@ const redisClient = redis.createClient({
 redisClient.connect().catch(console.error)
 const redisStore = new RedisStore({
     client: redisClient,
-    prefix: "fmiapp:",
+    prefix: "fmiappsid:",
 })
 
 redisClient.on('error', err => {
@@ -37,14 +37,17 @@ app.use(cors())
 app.use(express.json())
 app.use(
     session({
-        store: redisStore,
         secret: process.env.SESSION_SECRET,
         resave: false,
         saveUninitialized: true
     })
 )
 
-app.post('/email-login', async (req, res) => {
+app.get('/api/current-user', async (req, res) => {
+    res.send(await redisStore.get(req.sessionID) ? true : false)
+})
+
+app.post('/api/email-login', async (req, res) => {
     let hour = 3600000
     if(req.body.remember) {
         req.session.cookie.maxAge = 5 * 24 * hour // 5 days
@@ -74,26 +77,24 @@ app.post('/email-login', async (req, res) => {
 
         if(studentObj) {
             req.session.userData = Object.assign(studentObj.dataValues, userObj.dataValues)
-            res.send({
-                userData: req.session.userData,
-                userSID: req.sessionID
-            })
+            redisStore.set(req.sessionID, req.session)
+
+            res.status(200).send(req.sessionID)
         }
         else if(adminObj) {
             req.session.userData = Object.assign(adminObj.dataValues, userObj.dataValues)
-            res.send({
-                userData: req.session.userData,
-                userSID: req.sessionID
-            })
+            redisStore.set(req.sessionID, req.session)
+
+            res.status(200).send(req.sessionID)
         }
         else {
             // to be implemented
-            res.send({})
+            res.status(400).send("User doesn't have an asigned role")
         }
     } 
     else {
         // to be implemented
-        res.send({})
+        res.status(400).send("User not found in database")
     }
 })
 

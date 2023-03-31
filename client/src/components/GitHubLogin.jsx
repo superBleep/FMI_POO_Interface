@@ -9,7 +9,7 @@ export default function GitHubLogin() {
     const queryString = window.location.search;
     const urlParams = new URLSearchParams(queryString);
     const codeParam = urlParams.get("code");
-    console.log(codeParam);
+    //console.log(codeParam);
 
     if (codeParam && (accessToken === null )) {
       async function getAccessToken() {

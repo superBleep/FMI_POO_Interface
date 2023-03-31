@@ -5,7 +5,7 @@ import FloatingLabel from 'react-bootstrap/FloatingLabel';
 const backendLink = `http://${import.meta.env.VITE_DOMAIN}:${import.meta.env.VITE_BACKEND_PORT}`
 
 async function loginUserEmail(credentials) {
-    return fetch(`${backendLink}/email-login`, {
+    return fetch(`${backendLink}/api/email-login`, {
         headers: {
             'Content-Type': 'application/json'
         },
@@ -13,10 +13,10 @@ async function loginUserEmail(credentials) {
         method: 'POST',
         body: JSON.stringify(credentials)
     })
-    .then(res => res.json())
-} 
+    .then(res => res)
+}
 
-export default function EmailLogin({ setToken, setUserData }) {
+export default function EmailLogin({ setLoggedIn }) {
     const loginHandler = async event => {
         event.preventDefault()
 
@@ -26,15 +26,13 @@ export default function EmailLogin({ setToken, setUserData }) {
             remember: event.target.login_remember.checked
         }
         const loginRes = await loginUserEmail(credentials)
-        console.log(loginRes)
 
-        if(Object.keys(loginRes).length != 0) {
-            setToken(loginRes.userSID)
-            setUserData(loginRes.userData)
+        if(loginRes.status == 200) {
+            setLoggedIn(true)
         }
         else {
             // to be implemented
-            console.log("User not found!")
+            console.log(await loginRes.text())
         }
     }
 
