@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useContext } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faGithub } from "@fortawesome/free-brands-svg-icons";
+import { Button } from "react-bootstrap";
 const CLIENT_ID = import.meta.env.VITE_CLIENT_ID;   
 export default function GitHubLogin({callback}) {
   useEffect(() => {
@@ -23,29 +24,7 @@ export default function GitHubLogin({callback}) {
       getAccessToken();
     }
     else if (localStorage.getItem("accessToken")) {
-      async function getUserData() {
-        const dataRoute = `http://localhost:4000/getUserData`;
-        await fetch(dataRoute, {
-          method: "GET",
-          headers: {
-            "Authorization": `Bearer ${localStorage.getItem("accessToken")}`
-          }
-        })
-        .then((response) => response.json()) 
-        .then((data) => {
-          // daca contul de github nu este in baza de date, loginul a esuat
-          const allowedUsers = ['test1','test2', 'alex-toma0']
-          if (!allowedUsers.includes(data.login)) {
-            localStorage.removeItem("accessToken");
-            window.alert("Contul nu este in baza de date! Loginul a esuat!");
-          }
-          else {
-            callback(data);
-          }
-        });
-      }
-      getUserData();
-      
+      callback(true);
     } 
   }, []);
 
@@ -58,10 +37,9 @@ export default function GitHubLogin({callback}) {
   };
   return (
     <>
-      <button className="btn btn-primary" onClick={loginWithGithub}>
-        <FontAwesomeIcon icon={faGithub} />
+      <Button onClick={loginWithGithub} variant="primary"><FontAwesomeIcon icon={faGithub} />
         Login with GitHub
-      </button>
+      </Button>
     </>
   );
 }
