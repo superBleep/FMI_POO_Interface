@@ -4,6 +4,7 @@ import { fileURLToPath } from 'url'
 import express from 'express'
 import cors from 'cors'
 import session from 'express-session'
+import cookieParser from 'cookie-parser'
 import redis from 'redis'
 import RedisStore from 'connect-redis'
 import { admin, dbUser, student } from './sequelizeModels.js'
@@ -33,18 +34,29 @@ redisClient.on('connect', err => {
     console.log('Connected to Redis')
 })
 
-app.use(cors())
+app.use(cors({
+    origin: `http://${process.env.DOMAIN}:${process.env.FRONTEND_PORT}`,
+    credentials: true
+}))
+app.use(cookieParser())
 app.use(express.json())
 app.use(
     session({
         secret: process.env.SESSION_SECRET,
         resave: false,
-        saveUninitialized: true
+        saveUninitialized: true,
+        cookie: {sameSite: 'strict'}
     })
 )
 
 app.get('/api/current-user', async (req, res) => {
-    res.send(await redisStore.get(req.sessionID) ? true : false)
+    await redisStore.get(req.sessionID, (_, data) => {
+        if(data) {
+            res.send(true)
+        } else {
+            res.send(false)
+        }
+    })
 })
 
 app.post('/api/email-login', async (req, res) => {

@@ -10,6 +10,7 @@ async function loginUserEmail(credentials) {
             'Content-Type': 'application/json'
         },
         mode: 'cors',
+        credentials: 'include',
         method: 'POST',
         body: JSON.stringify(credentials)
     })
