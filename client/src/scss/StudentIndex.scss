@@ -1,0 +1,22 @@
+#studentIndex {
+    padding: 3em;
+
+    h1, h2 {
+        display: inline-block;
+        text-decoration: underline;
+        text-decoration-color: rgb(59, 117, 223);
+    }
+
+    #projectsDiv {
+        margin-top: 1em;
+
+        Button {
+            float: right;
+        }
+    }
+
+    #noProject {
+        color: gray;
+        text-align: center;
+    }
+}

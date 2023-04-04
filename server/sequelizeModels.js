@@ -52,3 +52,29 @@ export const admin = sequelize.define('admin', {
     tableName: 'admin',
     timestamps: false
 })
+
+export const dbProject = sequelize.define('dbProject', {
+    student_id: {
+        type: DataTypes.INTEGER,
+        references: 'student',
+        referencesKey: 'id',
+        primaryKey: true
+    },
+    link: {
+        type: DataTypes.TEXT,
+        allowNull: false
+    },
+    starred: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+    },
+    observations: {
+        type: DataTypes.TEXT
+    },
+    outdated: {
+        type: DataTypes.ENUM('yellow', 'orange', 'red')
+    }
+}, {
+    tableName: 'project',
+    timestamps: false
+})
