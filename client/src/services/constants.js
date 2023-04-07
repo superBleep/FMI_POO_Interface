@@ -1,4 +1,4 @@
 export const generalStyle = {
     height: '100vh',
-    backgroundColor: 'var(--bs-dark)'
-}
+    backgroundColor: 'var(--bs-dark)',
+};

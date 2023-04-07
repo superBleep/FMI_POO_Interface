@@ -1,161 +1,161 @@
-import dotenv from 'dotenv'
-import { dirname, resolve } from 'path'
-import { fileURLToPath } from 'url'
-import express from 'express'
-import cors from 'cors'
-import session from 'express-session'
-import cookieParser from 'cookie-parser'
-import redis from 'redis'
-import RedisStore from 'connect-redis'
-import { dbUser, student, admin, dbProject, sequelize } from './sequelizeModels.js'
+import dotenv from 'dotenv';
+import { dirname, resolve } from 'path';
+import { fileURLToPath } from 'url';
+import express from 'express';
+import cors from 'cors';
+import session from 'express-session';
+import cookieParser from 'cookie-parser';
+import redis from 'redis';
+import RedisStore from 'connect-redis';
+import { dbUser, student, admin, dbProject, sequelize } from './sequelizeModels.js';
 
-const __dirname = dirname(fileURLToPath(import.meta.url))
+const __dirname = dirname(fileURLToPath(import.meta.url));
 dotenv.config({
-    path: resolve(__dirname + '/../.env')
-})
+    path: resolve(__dirname + '/../.env'),
+});
 
-const app = express()
-const port = process.env.BACKEND_PORT
+const app = express();
+const port = process.env.BACKEND_PORT;
 
 const redisClient = redis.createClient({
     host: process.env.REDIS_HOST,
-    port: process.env.REDIS_PORT
-})
-redisClient.connect().catch(console.error)
+    port: process.env.REDIS_PORT,
+});
+redisClient.connect().catch(console.error);
 const redisStore = new RedisStore({
     client: redisClient,
-    prefix: "fmiappsid:",
-})
+    prefix: 'fmiappsid:',
+});
 
-redisClient.on('error', err => {
-    console.error('Redis error: ' + err)
-})
-redisClient.on('connect', err => {
-    console.log('Connected to Redis')
-})
+redisClient.on('error', (err) => {
+    console.error('Redis error: ' + err);
+});
+redisClient.on('connect', (err) => {
+    console.log('Connected to Redis');
+});
 
-app.use(cors({
-    origin: `http://${process.env.DOMAIN}:${process.env.FRONTEND_PORT}`,
-    credentials: true
-}))
-app.use(cookieParser())
-app.use(express.json())
+app.use(
+    cors({
+        origin: `http://${process.env.DOMAIN}:${process.env.FRONTEND_PORT}`,
+        credentials: true,
+    })
+);
+app.use(cookieParser());
+app.use(express.json());
 app.use(
     session({
         secret: process.env.SESSION_SECRET,
         resave: false,
         saveUninitialized: true,
-        cookie: {sameSite: 'strict'}
+        cookie: { sameSite: 'strict' },
     })
-)
+);
 
 app.get('/api/current-user', async (req, res) => {
     await redisStore.get(req.sessionID, (_, data) => {
-        if(data) {
-            res.send(true)
+        if (data) {
+            res.send(true);
         } else {
-            res.send(false)
+            res.send(false);
         }
-    })
-})
+    });
+});
 
 app.get('/api/user-data', async (req, res) => {
     await redisStore.get(req.sessionID, (_, data) => {
-        res.send(data)
-    })
-})
+        res.send(data);
+    });
+});
 
 app.post('/api/user-projects', async (req, res) => {
-    let projectsObj = (await dbProject.findAll({
+    let projectsObj = await dbProject.findAll({
         where: {
-            student_id: req.body.student_id
-        }
-    }))
+            student_id: req.body.student_id,
+        },
+    });
 
-    if(projectsObj.length) {
-        res.status(200).json(Object.keys(projectsObj).map(key => {
-            return projectsObj[key].dataValues
-        }))
+    if (projectsObj.length) {
+        res.status(200).json(
+            Object.keys(projectsObj).map((key) => {
+                return projectsObj[key].dataValues;
+            })
+        );
+    } else {
+        res.status(404).send();
     }
-    else {
-        res.status(404).send()
-    }
-})
+});
 
 app.post('/api/delete-project', async (req, res) => {
-    dbProject.findOne({
-        where: {
-            id: req.body.id
-        }
-    })
-    .then(project => project.destroy())
-    .then(res => res)
-})
+    dbProject
+        .findOne({
+            where: {
+                id: req.body.id,
+            },
+        })
+        .then((project) => project.destroy())
+        .then((res) => res);
+});
 
 app.post('/api/post-project', async (req, res) => {
     dbProject.create({
         student_id: req.body.student_id,
         name: req.body.name,
         link: req.body.link,
-        starred: false
-    })
+        starred: false,
+    });
 
-    res.status(200)
-})
+    res.status(200);
+});
 
 app.post('/api/email-login', async (req, res) => {
-    let hour = 3600000
-    if(req.body.remember) {
-        req.session.cookie.maxAge = 5 * 24 * hour // 5 days
+    let hour = 3600000;
+    if (req.body.remember) {
+        req.session.cookie.maxAge = 5 * 24 * hour; // 5 days
     } else {
-        req.session.cookie.maxAge = hour / 2 // 30 min
+        req.session.cookie.maxAge = hour / 2; // 30 min
     }
 
-    let userObj = (await dbUser.findOne({
+    let userObj = await dbUser.findOne({
         where: {
             email: req.body.email,
-            password: req.body.pass
-        }
-    }))
+            password: req.body.pass,
+        },
+    });
 
-    if(userObj) {
-        let studentObj = (await student.findOne({
+    if (userObj) {
+        let studentObj = await student.findOne({
             where: {
-                id: userObj.dataValues.id
-            }
-        }))
+                id: userObj.dataValues.id,
+            },
+        });
 
-        let adminObj = (await admin.findOne({
+        let adminObj = await admin.findOne({
             where: {
-                id: userObj.dataValues.id
-            }
-        }))
+                id: userObj.dataValues.id,
+            },
+        });
 
-        if(studentObj) {
-            req.session.userData = Object.assign(studentObj.dataValues, userObj.dataValues)
-            redisStore.set(req.sessionID, req.session)
+        if (studentObj) {
+            req.session.userData = Object.assign(studentObj.dataValues, userObj.dataValues);
+            redisStore.set(req.sessionID, req.session);
 
-            res.status(200).send(req.sessionID)
-        }
-        else if(adminObj) {
-            req.session.userData = Object.assign(adminObj.dataValues, userObj.dataValues)
-            redisStore.set(req.sessionID, req.session)
+            res.status(200).send(req.sessionID);
+        } else if (adminObj) {
+            req.session.userData = Object.assign(adminObj.dataValues, userObj.dataValues);
+            redisStore.set(req.sessionID, req.session);
 
-            res.status(200).send(req.sessionID)
-        }
-        else {
+            res.status(200).send(req.sessionID);
+        } else {
             // to be implemented
-            res.status(400).send("User doesn't have an asigned role")
+            res.status(400).send("User doesn't have an asigned role");
         }
-    } 
-    else {
+    } else {
         // to be implemented
-        res.status(400).send("User not found in database")
+        res.status(400).send('User not found in database');
     }
-})
+});
 
-app.listen(port, "localhost", err => {
-    if (err)
-        console.error("Failed to setup server:", err)
-    console.log("Server started on port " + port)
-})
+app.listen(port, 'localhost', (err) => {
+    if (err) console.error('Failed to setup server:', err);
+    console.log('Server started on port ' + port);
+});
