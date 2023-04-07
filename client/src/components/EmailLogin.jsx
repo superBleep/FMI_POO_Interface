@@ -52,7 +52,7 @@ export default function EmailLogin({ setLoggedIn }) {
             </Form.Group>
 
             <Button className='w-100' variant='primary' type='submit'>
-                Login
+                Logare
             </Button>
 
             <hr></hr>

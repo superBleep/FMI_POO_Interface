@@ -7,7 +7,7 @@ import session from 'express-session'
 import cookieParser from 'cookie-parser'
 import redis from 'redis'
 import RedisStore from 'connect-redis'
-import { dbUser, student, admin, dbProject } from './sequelizeModels.js'
+import { dbUser, student, admin, dbProject, sequelize } from './sequelizeModels.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 dotenv.config({
@@ -73,11 +73,34 @@ app.post('/api/user-projects', async (req, res) => {
     }))
 
     if(projectsObj.length) {
-        res.status(200).send(projectsObj.dataValues)
+        res.status(200).json(Object.keys(projectsObj).map(key => {
+            return projectsObj[key].dataValues
+        }))
     }
     else {
-        res.status(200).send()
+        res.status(404).send()
     }
+})
+
+app.post('/api/delete-project', async (req, res) => {
+    dbProject.findOne({
+        where: {
+            id: req.body.id
+        }
+    })
+    .then(project => project.destroy())
+    .then(res => res)
+})
+
+app.post('/api/post-project', async (req, res) => {
+    dbProject.create({
+        student_id: req.body.student_id,
+        name: req.body.name,
+        link: req.body.link,
+        starred: false
+    })
+
+    res.status(200)
 })
 
 app.post('/api/email-login', async (req, res) => {

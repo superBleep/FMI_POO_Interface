@@ -54,11 +54,20 @@ export const admin = sequelize.define('admin', {
 })
 
 export const dbProject = sequelize.define('dbProject', {
+    id: {
+        type: DataTypes.INTEGER,
+        autoIncrement: true,
+        primaryKey: true
+    },
     student_id: {
         type: DataTypes.INTEGER,
         references: 'student',
         referencesKey: 'id',
         primaryKey: true
+    },
+    name: {
+        type: DataTypes.STRING(50),
+        allowNull: false
     },
     link: {
         type: DataTypes.TEXT,
