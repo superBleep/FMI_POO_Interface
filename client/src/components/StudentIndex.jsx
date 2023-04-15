@@ -4,6 +4,7 @@ import Button from 'react-bootstrap/Button';
 import Modal from 'react-bootstrap/Modal';
 import Form from 'react-bootstrap/Form';
 import Table from 'react-bootstrap/Table';
+import Container from 'react-bootstrap/Container';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faStar, faPlus, faTrashCan } from '@fortawesome/free-solid-svg-icons';
 import { faStar as faRStar } from '@fortawesome/free-regular-svg-icons';
@@ -89,10 +90,16 @@ export default function StudentIndex() {
                             return (
                                 <tr key={project.id}>
                                     <td>{project.name}</td>
-                                    <td>{project.link}</td>
+                                    <td>
+                                        <a href={project.link} target="blank">
+                                            {project.link}
+                                        </a>
+                                    </td>
                                     <td>{star}</td>
                                     <td>{obs}</td>
-                                    <td>{project.outdated}</td>
+                                    <td>
+                                        <Container id="outdated">test</Container>
+                                    </td>
                                     <td>
                                         <Button
                                             variant="danger"
@@ -113,6 +120,8 @@ export default function StudentIndex() {
     };
 
     const postProject = async (event) => {
+        handleClose();
+
         const postProjectAPI = async (projectData) => {
             return fetch(`${backendLink}/api/post-project`, {
                 headers: {
@@ -134,8 +143,6 @@ export default function StudentIndex() {
         };
         change ? setChange(false) : setChange(true);
         await postProjectAPI(projectData);
-
-        handleClose();
     };
 
     const deletionModal = (project) => {
@@ -172,16 +179,22 @@ export default function StudentIndex() {
                                 <Form.Control
                                     type="text"
                                     placeholder="Introdu numele (max. 50 de litere)"
+                                    required
                                 ></Form.Control>
                             </Form.Group>
                             <Form.Group controlId="formProjectLink" style={{ marginTop: '1em' }}>
                                 <Form.Label>Link-ul proiectului (GitHub)</Form.Label>
-                                <Form.Control type="text" placeholder="Introdu link-ul"></Form.Control>
+                                <Form.Control
+                                    type="text"
+                                    placeholder="https://github.com/username/proiect"
+                                    required
+                                    pattern="https:\/\/github.com\/[A-Za-z0-9]+\/.+"
+                                ></Form.Control>
                             </Form.Group>
                         </Form>
                     </Modal.Body>
                     <Modal.Footer>
-                        <Button variant="primary" type="submit" form="addProjectForm" onClick={handleClose}>
+                        <Button variant="primary" type="submit" form="addProjectForm">
                             Adaugă
                         </Button>
                     </Modal.Footer>

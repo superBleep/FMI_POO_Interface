@@ -7,6 +7,7 @@ import session from 'express-session';
 import cookieParser from 'cookie-parser';
 import redis from 'redis';
 import RedisStore from 'connect-redis';
+import { Octokit } from 'octokit';
 import { dbUser, student, admin, dbProject, sequelize } from './sequelizeModels.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -32,6 +33,10 @@ redisClient.on('error', (err) => {
 });
 redisClient.on('connect', (err) => {
     console.log('Connected to Redis');
+});
+
+const octokit = new Octokit({
+    auth: process.env.GITHUB_TOKEN
 });
 
 app.use(
@@ -97,11 +102,35 @@ app.post('/api/delete-project', async (req, res) => {
 });
 
 app.post('/api/post-project', async (req, res) => {
+    {
+        let starred = false;
+        let owner, repo;
+        const matches = (req.body.link).matchAll(".*\/(.*)\/(.*)");
+        for(let match of matches) {
+            owner = match[1];
+            repo = match[2];
+        }
+        
+        let allStarred = await octokit.request(`GET /repos/${owner}/${repo}/stargazers`, {
+            owner: owner,
+            repo: repo,
+            headers: {
+              'X-GitHub-Api-Version': '2022-11-28'
+            }
+          })
+    
+        allStarred = allStarred["data"];
+        for(let user of allStarred) {
+            if(user.login == 'mcmarius') // hardcoded!!!
+                starred = true;
+        }
+    }
+
     dbProject.create({
         student_id: req.body.student_id,
         name: req.body.name,
         link: req.body.link,
-        starred: false,
+        starred: starred,
     });
 
     res.status(200);
