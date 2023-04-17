@@ -7,7 +7,9 @@ import session from 'express-session';
 import cookieParser from 'cookie-parser';
 import redis from 'redis';
 import RedisStore from 'connect-redis';
-import { dbUser, student, admin, dbProject, sequelize } from './sequelizeModels.js';
+import { dbUser, student, admin, dbProject } from './sequelizeModels.js';
+
+import sequelize from './models/index.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 dotenv.config({
