@@ -5,7 +5,7 @@ import { Sequelize } from 'sequelize';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 dotenv.config({
-    path: resolve(__dirname + '/../.env'),
+    path: resolve(__dirname + '/../../.env'),
 });
 
 export const sequelize = new Sequelize(process.env.DATABASE_LOGIN, {
