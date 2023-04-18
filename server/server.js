@@ -8,8 +8,10 @@ import cookieParser from 'cookie-parser';
 import redis from 'redis';
 import RedisStore from 'connect-redis';
 import { dbUser, student, admin, dbProject } from './sequelizeModels.js';
+import { sequelize } from './index.js';
+import initModels from './models/init-models.js';
 
-import sequelize from './models/index.js';
+const models = initModels(sequelize);
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 dotenv.config({
@@ -157,7 +159,11 @@ app.post('/api/email-login', async (req, res) => {
     }
 });
 
-app.listen(port, 'localhost', (err) => {
+app.listen(port, 'localhost', async (err) => {
     if (err) console.error('Failed to setup server:', err);
+
+    await sequelize.sync({ force: true });
+    console.log('Database synced');
+
     console.log('Server started on port ' + port);
 });
