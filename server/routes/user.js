@@ -6,9 +6,13 @@ const router = Router();
 // TODO - Use validations before controller functions
 // TODO - Check if authenticated
 
-router.route('/').get(userController.getUsers);
+// ! TEMP | Old: /api/current-user
+router.route('/is-current-user').get(userController.isCurrentUser);
 
-router.route('/current_user').get(userController.getCurrentUser);
+// ! Move to auth
+router.route('/current-user').get(userController.getCurrentUser);
+
+router.route('/').get(userController.getUsers);
 
 router
     .route('/:id')

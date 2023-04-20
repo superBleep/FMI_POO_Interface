@@ -37,62 +37,6 @@ app.use(
     })
 );
 
-app.get('/api/current-user', async (req, res) => {
-    await redisStore.get(req.sessionID, (_, data) => {
-        if (data) {
-            res.send(true);
-        } else {
-            res.send(false);
-        }
-    });
-});
-
-app.get('/api/user-data', async (req, res) => {
-    await redisStore.get(req.sessionID, (_, data) => {
-        res.send(data);
-    });
-});
-
-app.post('/api/user-projects', async (req, res) => {
-    let projectsObj = await dbProject.findAll({
-        where: {
-            student_id: req.body.student_id,
-        },
-    });
-
-    if (projectsObj.length) {
-        res.status(200).json(
-            Object.keys(projectsObj).map((key) => {
-                return projectsObj[key].dataValues;
-            })
-        );
-    } else {
-        res.status(404).send();
-    }
-});
-
-app.post('/api/delete-project', async (req, res) => {
-    dbProject
-        .findOne({
-            where: {
-                id: req.body.id,
-            },
-        })
-        .then((project) => project.destroy())
-        .then((res) => res);
-});
-
-app.post('/api/post-project', async (req, res) => {
-    dbProject.create({
-        student_id: req.body.student_id,
-        name: req.body.name,
-        link: req.body.link,
-        starred: false,
-    });
-
-    res.status(200);
-});
-
 app.post('/api/email-login', async (req, res) => {
     let hour = 3600000;
     if (req.body.remember) {
