@@ -9,10 +9,7 @@ import redis from 'redis';
 import RedisStore from 'connect-redis';
 import { dbUser, student, admin, dbProject } from './sequelizeModels.js';
 
-import { sequelize } from './db/index.js';
-import initModels from './db/models/init-models.js';
-
-const models = initModels(sequelize);
+import { sequelize, models } from './database/index.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 dotenv.config({
