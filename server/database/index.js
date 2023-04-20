@@ -15,5 +15,6 @@ try {
     console.error('Unable to connect to the database:', error);
 }
 
+// TODO - Convert CommonJS models to ESM
 // Init models
 export const models = initModels(sequelize);

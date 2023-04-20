@@ -5,8 +5,7 @@ import express from 'express';
 import cors from 'cors';
 import session from 'express-session';
 import cookieParser from 'cookie-parser';
-import redis from 'redis';
-import RedisStore from 'connect-redis';
+
 import { dbUser, student, admin, dbProject } from './sequelizeModels.js';
 
 import { sequelize, models } from './database/index.js';
@@ -16,25 +15,10 @@ dotenv.config({
     path: resolve(__dirname + '/../.env'),
 });
 
+import { redisStore } from './libs/redis.js';
+
 const app = express();
 const port = process.env.BACKEND_PORT;
-
-const redisClient = redis.createClient({
-    host: process.env.REDIS_HOST,
-    port: process.env.REDIS_PORT,
-});
-redisClient.connect().catch(console.error);
-const redisStore = new RedisStore({
-    client: redisClient,
-    prefix: 'fmiappsid:',
-});
-
-redisClient.on('error', (err) => {
-    console.error('Redis error: ' + err);
-});
-redisClient.on('connect', (err) => {
-    console.log('Connected to Redis');
-});
 
 app.use(
     cors({
@@ -160,6 +144,7 @@ app.post('/api/email-login', async (req, res) => {
 app.listen(port, 'localhost', async (err) => {
     if (err) console.error('Failed to setup server:', err);
 
+    // TODO - Switch .sync() for migrations
     await sequelize.sync();
     console.log('Database synced');
 
