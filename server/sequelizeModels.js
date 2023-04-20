@@ -89,15 +89,8 @@ export const dbProject = sequelize.define(
             type: DataTypes.TEXT,
             allowNull: false,
         },
-        starred: {
-            type: DataTypes.BOOLEAN,
-            allowNull: false,
-        },
         observations: {
             type: DataTypes.TEXT,
-        },
-        outdated: {
-            type: DataTypes.ENUM('yellow', 'orange', 'red'),
         },
     },
     {

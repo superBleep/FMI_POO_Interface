@@ -102,35 +102,10 @@ app.post('/api/delete-project', async (req, res) => {
 });
 
 app.post('/api/post-project', async (req, res) => {
-    {
-        let starred = false;
-        let owner, repo;
-        const matches = (req.body.link).matchAll(".*\/(.*)\/(.*)");
-        for(let match of matches) {
-            owner = match[1];
-            repo = match[2];
-        }
-        
-        let allStarred = await octokit.request(`GET /repos/${owner}/${repo}/stargazers`, {
-            owner: owner,
-            repo: repo,
-            headers: {
-              'X-GitHub-Api-Version': '2022-11-28'
-            }
-          })
-    
-        allStarred = allStarred["data"];
-        for(let user of allStarred) {
-            if(user.login == 'mcmarius') // hardcoded!!!
-                starred = true;
-        }
-    }
-
     dbProject.create({
         student_id: req.body.student_id,
         name: req.body.name,
-        link: req.body.link,
-        starred: starred,
+        link: req.body.link
     });
 
     res.status(200);
