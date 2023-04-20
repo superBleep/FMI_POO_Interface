@@ -1,10 +1,9 @@
 import models from './../database/index.js';
-import { redisStore } from './../libs/redis.js';
 
 // TODO - Get all projects - GET /projects
 export const getProjects = async (req, res, next) => {};
 
-// TODO - Post project - POST /projects
+// TODO - Create project - POST /projects
 // ! Currently old /api/post-project
 export const createProject = async (req, res, next) => {
     try {
