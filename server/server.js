@@ -10,6 +10,8 @@ import { dbUser, student, admin, dbProject } from './sequelizeModels.js';
 
 import { sequelize, models } from './database/index.js';
 
+import * as configs from './config/index.js';
+
 const __dirname = dirname(fileURLToPath(import.meta.url));
 dotenv.config({
     path: resolve(__dirname + '/../.env'),
@@ -84,6 +86,9 @@ app.post('/api/email-login', async (req, res) => {
         res.status(400).send('User not found in database');
     }
 });
+
+// * Router
+configs.routerConfig(app);
 
 app.listen(port, 'localhost', async (err) => {
     if (err) console.error('Failed to setup server:', err);

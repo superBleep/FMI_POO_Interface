@@ -16,8 +16,8 @@ router.route('/').get(userController.getUsers);
 
 router
     .route('/:id')
-    .get(UserController.getUserById)
-    .put(UserController.updateUserById)
-    .delete(UserController.deleteUserById);
+    .get(userController.getUserById)
+    .put(userController.updateUserById)
+    .delete(userController.deleteUserById);
 
 export default router;

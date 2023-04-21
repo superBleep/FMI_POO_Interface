@@ -23,14 +23,14 @@ export default function initModels(sequelize) {
         foreignKey: 'user_id',
         otherKey: 'class_id',
     });
-    Project.belongsTo(Class, { as: 'class', foreignKey: 'class_id' });
-    Class.hasMany(Project, { as: 'Projects', foreignKey: 'class_id' });
-    User_Class.belongsTo(Class, { as: 'class', foreignKey: 'class_id' });
-    Class.hasMany(User_Class, { as: 'User_Classes', foreignKey: 'class_id' });
-    Project.belongsTo(User, { as: 'user', foreignKey: 'user_id' });
-    User.hasMany(Project, { as: 'Projects', foreignKey: 'user_id' });
-    User_Class.belongsTo(User, { as: 'user', foreignKey: 'user_id' });
-    User.hasMany(User_Class, { as: 'User_Classes', foreignKey: 'user_id' });
+    Project.belongsTo(Class, { as: 'class', foreignKey: 'class_id', onDelete: 'CASCADE' });
+    Class.hasMany(Project, { as: 'Projects', foreignKey: 'class_id', onDelete: 'CASCADE' });
+    User_Class.belongsTo(Class, { as: 'class', foreignKey: 'class_id', onDelete: 'CASCADE' });
+    Class.hasMany(User_Class, { as: 'User_Classes', foreignKey: 'class_id', onDelete: 'CASCADE' });
+    Project.belongsTo(User, { as: 'user', foreignKey: 'user_id', onDelete: 'CASCADE' });
+    User.hasMany(Project, { as: 'Projects', foreignKey: 'user_id', onDelete: 'CASCADE' });
+    User_Class.belongsTo(User, { as: 'user', foreignKey: 'user_id', onDelete: 'CASCADE' });
+    User.hasMany(User_Class, { as: 'User_Classes', foreignKey: 'user_id', onDelete: 'CASCADE' });
 
     return {
         Class,

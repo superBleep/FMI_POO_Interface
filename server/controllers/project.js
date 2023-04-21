@@ -1,4 +1,4 @@
-import models from './../database/index.js';
+import { models } from './../database/index.js';
 
 // TODO - Get all projects - GET /projects
 export const getProjects = async (req, res, next) => {};

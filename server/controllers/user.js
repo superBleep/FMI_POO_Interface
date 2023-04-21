@@ -1,5 +1,5 @@
-import models from './../database/index.js';
 import { redisStore } from './../libs/redis.js';
+import { models } from './../database/index.js';
 
 // TODO - Get current user - GET /users/current_user
 
@@ -32,14 +32,72 @@ export const isCurrentUser = async (req, res, next) => {
     }
 };
 
-// TODO - Get all users - GET /users
-export const getUsers = async (req, res, next) => {};
+// * Get all users - GET /users
+export const getUsers = async (req, res, next) => {
+    try {
+        const UsersListResponse = await models.User.findAll();
+        return res.status(200).json(UsersListResponse);
+    } catch (err) {
+        next(err);
+    }
+};
 
-// TODO - Get user by id - GET /users/:id
-export const getUserById = async (req, res, next) => {};
+// * Get user by id - GET /users/:id
+// TODO If id is not UUID -> throws error
+export const getUserById = async (req, res, next) => {
+    try {
+        const { id } = req.params;
 
-// TODO - Update user by id - PUT /users/:id
-export const updateUserById = async (req, res, next) => {};
+        const userResponse = await models.User.findOne({
+            where: { user_id: id },
+        });
 
-// TODO - Delete user by id - DELETE /users/:id
-export const deleteUserById = async (req, res, next) => {};
+        if (userResponse === null) {
+            return res.status(404).json('User not found');
+        }
+
+        return res.status(200).json(userResponse);
+    } catch (err) {
+        next(err);
+    }
+};
+
+// * Update user by id - PUT /users/:id
+export const updateUserById = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const { newUser } = req.body;
+
+        const userResponse = await models.User.findOne({
+            where: { user_id: id },
+        });
+
+        if (userResponse === null) {
+            return res.status(404).json('User not found');
+        }
+
+        await userResponse.update(newUser);
+        return res.status(200).json({ success: true });
+    } catch (err) {
+        next(err);
+    }
+};
+
+// * Delete user by id - DELETE /users/:id
+export const deleteUserById = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+
+        const userResponse = await models.User.destroy({
+            where: { user_id: id },
+        });
+
+        if (userResponse === 0) {
+            return res.status(404).json('User not found');
+        }
+
+        return res.status(204).send();
+    } catch (err) {
+        next(err);
+    }
+};
