@@ -5,9 +5,7 @@ import express from 'express';
 import cors from 'cors';
 import session from 'express-session';
 import cookieParser from 'cookie-parser';
-
 import { sequelize } from './database/index.js';
-
 import * as configs from './config/index.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));

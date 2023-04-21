@@ -1,3 +1,4 @@
+import { Octokit } from '@octokit-next/core';
 import { React, useEffect, useState } from 'react';
 import '../css/StudentIndex.css';
 import Button from 'react-bootstrap/Button';
@@ -9,6 +10,84 @@ import { faStar, faPlus, faTrashCan } from '@fortawesome/free-solid-svg-icons';
 import { faStar as faRStar } from '@fortawesome/free-regular-svg-icons';
 
 const backendLink = `http://${import.meta.env.VITE_DOMAIN}:${import.meta.env.VITE_BACKEND_PORT}`;
+const octokit = new Octokit({
+    auth: import.meta.env.GITHUB_TOKEN
+});
+
+function outdatedColor(nrDays) {
+    if(nrDays) {
+        let dayPercent = 255 * 0.1;
+        let red = 0, green = 255;
+    
+        red += Math.round(nrDays * dayPercent);
+        green -= Math.round(nrDays * dayPercent);
+    
+        if(red > 255)
+            red = 255
+        if(green < 0)
+            green = 0
+    
+        red = red.toString(16).padStart(2, '0');
+        green = green.toString(16).padStart(2, '0');
+
+        let colorString = ['#', red, green, '00'].join('');
+        return {backgroundColor: colorString, color: 'black'};
+    }
+    else
+        return {backgroundColor: '#00FF00', color: 'black'};
+}
+
+async function getGitHubData(userProjects) {
+    userProjects.map(project => {
+        Object.assign(project, {
+            starred: false,
+            outdated: 0
+        });
+    })
+
+    let newProjects = userProjects.map(async project => {
+        const matches = (project.link).matchAll(".*\/(.*)\/(.*)").next().value;
+        let owner = matches[1];
+        let repo = matches[2];
+
+        let allStarred = (await octokit.request(`GET /repos/${owner}/${repo}/stargazers`, {
+            owner: owner,
+            repo: repo,
+            headers: {
+                'X-GitHub-Api-Version': '2022-11-28'
+            }
+        })).data;
+
+        let defaultBranch = (await octokit.request(`GET /repos/${owner}/${repo}`, {
+            owner: owner,
+            repo: repo,
+            headers: {
+                'X-GitHub-Api-Version': '2022-11-28'
+            }
+        })).data.default_branch;
+        let commentsURL = (await octokit.request(`GET /repos/${owner}/${repo}/branches/${defaultBranch}`, {
+            owner: owner,
+            repo: repo,
+            branch: defaultBranch,
+            headers: {
+                'X-GitHub-Api-Version': '2022-11-28'
+            }
+        })).data.commit.comments_url;
+        let comments = (await octokit.request(`GET ${commentsURL}`)).data;
+        let commentDate = new Date(comments[comments.length - 1].updated_at);
+        let currentDate = new Date();
+        project.outdated = Math.round((currentDate.getTime() - commentDate.getTime()) / (1000 * 3600 * 24));
+
+        for(let user of allStarred) {
+            if(user.login == 'mcmarius') // hardcoded!!!
+                project.starred = true;
+        }
+
+        return project;
+    })
+
+    return await Promise.all(newProjects);
+}
 
 export default function StudentIndex() {
     const [userData, setUserData] = useState();
@@ -46,7 +125,7 @@ export default function StudentIndex() {
 
                 let userProjects = {};
                 if (resp.status == 200) {
-                    userProjects = await resp.json();
+                    userProjects = await getGitHubData(await resp.json());
                 }
 
                 setStudentProjects(userProjects);
@@ -61,7 +140,7 @@ export default function StudentIndex() {
     const handleClose2 = () => setShow2(false);
     const handleShow2 = () => setShow2(true);
 
-    const showProjects = () => {
+    const listProjects = () => {
         if (!studentProjects || Object.keys(studentProjects).length == 0) {
             return <p id="noProject">Nu ai niciun proiect adăugat. Adaugă un proiect cu butonul de mai sus.</p>;
         } else {
@@ -78,34 +157,41 @@ export default function StudentIndex() {
                         </tr>
                     </thead>
                     <tbody>
-                        {studentProjects.map((project) => {
-                            if (project.starred)
-                                var star = <FontAwesomeIcon icon={faStar} style={{ color: '#ffff00' }} />;
-                            else var star = <FontAwesomeIcon icon={faRStar} />;
+                        {
+                            studentProjects.map(project => {
+                                if (project.starred)
+                                    var star = <FontAwesomeIcon icon={faStar} style={{ color: '#ffff00' }} />;
+                                else 
+                                    var star = <FontAwesomeIcon icon={faRStar} />;
 
-                            if (project.observations) var obs = project.observations;
-                            else var obs = '-';
+                                if (project.observations) var obs = project.observations;
+                                else var obs = '-';
 
-                            return (
-                                <tr key={project.id}>
-                                    <td>{project.name}</td>
-                                    <td>{project.link}</td>
-                                    <td>{star}</td>
-                                    <td>{obs}</td>
-                                    <td>{project.outdated}</td>
-                                    <td>
-                                        <Button
-                                            variant="danger"
-                                            title="Șterge proiectul"
-                                            onClick={deletionModal.bind(this, [project])}
-                                            className="w-100"
-                                        >
-                                            <FontAwesomeIcon icon={faTrashCan} />
-                                        </Button>
-                                    </td>
-                                </tr>
-                            );
-                        })}
+                                return (
+                                    <tr key={project.id}>
+                                        <td>{project.name}</td>
+                                        <td><a href={project.link} target="blank">{project.link}</a></td>
+                                        <td>{star}</td>
+                                        <td>{obs}</td>
+                                        <td>
+                                            <div id="outdated" style={outdatedColor(9)}>
+                                                <span>{project.outdated} zile</span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <Button
+                                                variant="danger"
+                                                title="Șterge proiectul"
+                                                onClick={deletionModal.bind(this, [project])}
+                                                className="w-100"
+                                            >
+                                                <FontAwesomeIcon icon={faTrashCan} />
+                                            </Button>
+                                        </td>
+                                    </tr>
+                                );
+                            })
+                        }
                     </tbody>
                 </Table>
             );
@@ -113,6 +199,8 @@ export default function StudentIndex() {
     };
 
     const postProject = async (event) => {
+        handleClose();
+
         const postProjectAPI = async (projectData) => {
             return fetch(`${backendLink}/api/post-project`, {
                 headers: {
@@ -134,8 +222,6 @@ export default function StudentIndex() {
         };
         change ? setChange(false) : setChange(true);
         await postProjectAPI(projectData);
-
-        handleClose();
     };
 
     const deletionModal = (project) => {
@@ -172,16 +258,22 @@ export default function StudentIndex() {
                                 <Form.Control
                                     type="text"
                                     placeholder="Introdu numele (max. 50 de litere)"
+                                    required
                                 ></Form.Control>
                             </Form.Group>
                             <Form.Group controlId="formProjectLink" style={{ marginTop: '1em' }}>
                                 <Form.Label>Link-ul proiectului (GitHub)</Form.Label>
-                                <Form.Control type="text" placeholder="Introdu link-ul"></Form.Control>
+                                <Form.Control
+                                    type="text"
+                                    placeholder="https://github.com/username/proiect"
+                                    required
+                                    pattern="https:\/\/github.com\/[A-Za-z0-9]+\/.+"
+                                ></Form.Control>
                             </Form.Group>
                         </Form>
                     </Modal.Body>
                     <Modal.Footer>
-                        <Button variant="primary" type="submit" form="addProjectForm" onClick={handleClose}>
+                        <Button variant="primary" type="submit" form="addProjectForm">
                             Adaugă
                         </Button>
                     </Modal.Footer>
@@ -189,8 +281,7 @@ export default function StudentIndex() {
 
                 <Modal show={show2} centered backdrop="static">
                     <Modal.Body>
-                        Ești sigur că vrei să ștergi proiectul{' '}
-                        <span style={{ fontWeight: 'bold' }}>{toDelete.name}</span>
+                        Ești sigur că vrei să ștergi proiectul {''} <span style={{ fontWeight: 'bold' }}>{toDelete.name}</span>?
                     </Modal.Body>
                     <Modal.Footer>
                         <Button variant="danger" onClick={handleClose2}>
@@ -209,7 +300,7 @@ export default function StudentIndex() {
                         <FontAwesomeIcon icon={faPlus} /> Proiect
                     </Button>
                     <hr></hr>
-                    {showProjects()}
+                    {listProjects()}
                 </div>
             </div>
         );
