@@ -5,6 +5,9 @@ const router = Router();
 
 // TODO - Use validations before controller functions
 
+// ! Temp - old /api/email-login
+router.post('/login-email', authController.loginEmail);
+
 // TODO - Create authController.login function
 router.post('/login', authController.login);
 
