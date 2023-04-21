@@ -66,7 +66,6 @@ export const getUserById = async (req, res, next) => {
 export const updateUserById = async (req, res, next) => {
     try {
         const { id } = req.params;
-        const { newUser } = req.body;
 
         const userResponse = await models.User.findOne({
             where: { user_id: id },
@@ -76,7 +75,7 @@ export const updateUserById = async (req, res, next) => {
             return res.status(404).json('User not found');
         }
 
-        await userResponse.update(newUser);
+        await userResponse.update(req.body);
         return res.status(200).json({ success: true });
     } catch (err) {
         next(err);
