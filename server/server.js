@@ -40,7 +40,9 @@ app.listen(port, 'localhost', async (err) => {
     if (err) console.error('Failed to setup server:', err);
 
     // TODO - Switch .sync() for migrations
-    await sequelize.sync();
+    await sequelize.sync({
+        schema: 'app'
+    });
     console.log('Database synced');
 
     console.log('Server started on port ' + port);

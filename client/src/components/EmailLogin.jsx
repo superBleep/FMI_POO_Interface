@@ -5,7 +5,7 @@ import FloatingLabel from 'react-bootstrap/FloatingLabel';
 const backendLink = `http://${import.meta.env.VITE_DOMAIN}:${import.meta.env.VITE_BACKEND_PORT}`;
 
 async function loginUserEmail(credentials) {
-    return fetch(`${backendLink}/api/email-login`, {
+    return fetch(`${backendLink}/api/auth/login-email`, {
         headers: {
             'Content-Type': 'application/json',
         },

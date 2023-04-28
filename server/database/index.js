@@ -10,7 +10,7 @@ export const sequelize = new Sequelize(sequelizeConfig.url, sequelizeConfig);
 
 try {
     await sequelize.authenticate();
-    console.log('Connection has been established successfully with the database.');
+    console.log('Connection has been established successfully with the database');
 } catch (error) {
     console.error('Unable to connect to the database:', error);
 }

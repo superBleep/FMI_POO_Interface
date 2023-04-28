@@ -35,6 +35,7 @@ export default class User_Class extends Model {
                         fields: [{ name: 'user_id' }, { name: 'class_id' }],
                     },
                 ],
+                schema: 'app'
             }
         );
     }

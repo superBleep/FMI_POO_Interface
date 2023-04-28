@@ -6,7 +6,7 @@ export const getClasses = async (req, res, next) => {
         const classesListResponse = await models.Class.findAll();
         return res.status(200).json(classesListResponse);
     } catch (err) {
-        next(err);
+        console.log(err);
     }
 };
 
@@ -16,7 +16,7 @@ export const createClass = async (req, res, next) => {
         const classResponse = await models.Class.create(req.body);
         res.status(201).json(classResponse);
     } catch (err) {
-        next(err);
+        console.log(err);
     }
 };
 
@@ -35,7 +35,7 @@ export const getClassById = async (req, res, next) => {
 
         return res.status(200).json(classResponse);
     } catch (err) {
-        next(err);
+        console.log(err);
     }
 };
 
@@ -55,7 +55,7 @@ export const updateClassById = async (req, res, next) => {
         await classResponse.update(req.body);
         return res.status(200).json({ success: true });
     } catch (err) {
-        next(err);
+        console.error(err);
     }
 };
 
@@ -74,6 +74,6 @@ export const deleteClassById = async (req, res, next) => {
 
         return res.status(204).send();
     } catch (err) {
-        next(err);
+        console.log(err);
     }
 };

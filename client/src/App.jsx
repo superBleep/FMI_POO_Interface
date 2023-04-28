@@ -12,7 +12,7 @@ export default function App() {
 
     useEffect(() => {
         const fetchCurrentUser = async () => {
-            const resp = await fetch(`${backendLink}/api/current-user`, {
+            const resp = await fetch(`${backendLink}/api/users/is-current-user`, {
                 headers: {
                     'Content-Type': 'application/json',
                 },

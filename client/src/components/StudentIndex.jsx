@@ -46,7 +46,7 @@ async function getGitHubData(userProjects) {
     })
 
     let newProjects = userProjects.map(async project => {
-        const matches = (project.link).matchAll(".*\/(.*)\/(.*)").next().value;
+        const matches = (project.github_link).matchAll(".*\/(.*)\/(.*)").next().value;
         let owner = matches[1];
         let repo = matches[2];
 
@@ -100,7 +100,7 @@ export default function StudentIndex() {
 
     useEffect(() => {
         const getStudentData = async () => {
-            const resp = await fetch(`${backendLink}/api/user-data`, {
+            const resp = await fetch(`${backendLink}/api/users/current-user`, {
                 headers: {
                     'Content-Type': 'application/json',
                 },
@@ -113,14 +113,13 @@ export default function StudentIndex() {
             setUserData(asyncUserData);
 
             const getStudentProjects = async () => {
-                const resp = await fetch(`${backendLink}/api/user-projects`, {
+                const resp = await fetch(`${backendLink}/api/projects/${asyncUserData.user_id}`, {
                     headers: {
                         'Content-Type': 'application/json',
                     },
                     mode: 'cors',
                     credentials: 'include',
-                    method: 'POST',
-                    body: JSON.stringify({ student_id: asyncUserData.id }),
+                    method: 'GET'
                 });
 
                 let userProjects = {};
@@ -168,9 +167,9 @@ export default function StudentIndex() {
                                 else var obs = '-';
 
                                 return (
-                                    <tr key={project.id}>
+                                    <tr key={project.project_id}>
                                         <td>{project.name}</td>
-                                        <td><a href={project.link} target="blank">{project.link}</a></td>
+                                        <td><a href={project.github_link} target="blank">{project.github_link}</a></td>
                                         <td>{star}</td>
                                         <td>{obs}</td>
                                         <td>
@@ -202,7 +201,7 @@ export default function StudentIndex() {
         handleClose();
 
         const postProjectAPI = async (projectData) => {
-            return fetch(`${backendLink}/api/post-project`, {
+            return fetch(`${backendLink}/api/projects`, {
                 headers: {
                     'Content-Type': 'application/json',
                 },
@@ -216,9 +215,10 @@ export default function StudentIndex() {
         event.preventDefault();
 
         const projectData = {
-            student_id: userData.id,
+            user_id: userData.user_id,
             name: event.target.formProjectName.value,
-            link: event.target.formProjectLink.value,
+            github_link: event.target.formProjectLink.value,
+            class_id: event.target.formProjectClass.value
         };
         change ? setChange(false) : setChange(true);
         await postProjectAPI(projectData);
@@ -230,14 +230,13 @@ export default function StudentIndex() {
     };
 
     const deleteProject = async () => {
-        fetch(`${backendLink}/api/delete-project`, {
+        fetch(`${backendLink}/api/projects/${toDelete.project_id}`, {
             headers: {
                 'Content-Type': 'application/json',
             },
             mode: 'cors',
             credentials: 'include',
-            method: 'POST',
-            body: JSON.stringify(toDelete),
+            method: 'DELETE'
         }).then((res) => res);
 
         handleClose2();
@@ -270,6 +269,13 @@ export default function StudentIndex() {
                                     pattern="https:\/\/github.com\/[A-Za-z0-9]+\/.+"
                                 ></Form.Control>
                             </Form.Group>
+                            <Form.Group controlId="formProjectClass" style={{ marginTop: '1em' }}>
+                                <Form.Label>Materia proiectului</Form.Label>
+                                <Form.Select>
+                                    <option>Selectează materia</option>
+                                    <option value="abd1cf1e-14ae-4934-91df-60aeb747bed9">POO</option>
+                                </Form.Select>
+                            </Form.Group>
                         </Form>
                     </Modal.Body>
                     <Modal.Footer>
@@ -293,7 +299,7 @@ export default function StudentIndex() {
                     </Modal.Footer>
                 </Modal>
 
-                <h1>Salut, {userData.name}!</h1>
+                <h1>Salut, {userData.last_name}!</h1>
                 <div id="projectsDiv">
                     <h2>Proiectele tale</h2>
                     <Button variant="primary" onClick={handleShow} title="Adaugă un proiect">

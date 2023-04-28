@@ -51,6 +51,7 @@ export default class Project extends Model {
                         fields: [{ name: 'project_id' }],
                     },
                 ],
+                schema: 'app'
             }
         );
     }

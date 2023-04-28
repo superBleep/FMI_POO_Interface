@@ -31,6 +31,7 @@ export default class Class extends Model {
                         fields: [{ name: 'class_id' }],
                     },
                 ],
+                schema: 'app'
             }
         );
     }

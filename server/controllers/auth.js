@@ -14,7 +14,7 @@ export const loginEmail = async (req, res, next) => {
         let userObj = await models.User.findOne({
             where: {
                 email: req.body.email,
-                password: req.body.password,
+                password: req.body.pass,
             },
         });
 
@@ -38,7 +38,7 @@ export const loginEmail = async (req, res, next) => {
             res.status(400).send('User not found in database');
         }
     } catch (err) {
-        next(err);
+        console.error(err);
     }
 };
 

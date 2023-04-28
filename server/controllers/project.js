@@ -6,7 +6,7 @@ export const getProjects = async (req, res, next) => {
         const projectsListResponse = await models.Project.findAll();
         return res.status(200).json(projectsListResponse);
     } catch (err) {
-        next(err);
+        console.log(err);
     }
 };
 
@@ -17,17 +17,17 @@ export const createProject = async (req, res, next) => {
 
         res.status(201).json(projectResponse);
     } catch (err) {
-        next(err);
+        console.log(err);
     }
 };
 
-// * Get project by id - GET /projects/:id
+// * Get projects by id - GET /projects/:id
 export const getProjectById = async (req, res, next) => {
     try {
         const { id } = req.params;
 
-        const projectResponse = await models.Project.findOne({
-            where: { project_id: id },
+        const projectResponse = await models.Project.findAll({
+            where: { user_id: id },
         });
 
         if (projectResponse === null) {
@@ -36,7 +36,7 @@ export const getProjectById = async (req, res, next) => {
 
         return res.status(200).json(projectResponse);
     } catch (err) {
-        next(err);
+        console.log(err);
     }
 };
 
@@ -56,7 +56,7 @@ export const updateProjectById = async (req, res, next) => {
         await projectResponse.update(req.body);
         return res.status(200).json({ success: true });
     } catch (err) {
-        next(err);
+        console.log(err);
     }
 };
 
@@ -75,6 +75,6 @@ export const deleteProjectById = async (req, res, next) => {
 
         return res.status(204).send();
     } catch (err) {
-        next(err);
+        console.log(err);
     }
 };

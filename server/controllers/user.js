@@ -11,7 +11,7 @@ export const getCurrentUser = async (req, res, next) => {
             res.send(data);
         });
     } catch (err) {
-        next(err);
+        console.log(err);
     }
 };
 
@@ -28,7 +28,7 @@ export const isCurrentUser = async (req, res, next) => {
             }
         });
     } catch (err) {
-        next(err);
+        console.log(err);
     }
 };
 
@@ -38,7 +38,7 @@ export const getUsers = async (req, res, next) => {
         const UsersListResponse = await models.User.findAll();
         return res.status(200).json(UsersListResponse);
     } catch (err) {
-        next(err);
+        console.log(err);
     }
 };
 
@@ -58,7 +58,7 @@ export const getUserById = async (req, res, next) => {
 
         return res.status(200).json(userResponse);
     } catch (err) {
-        next(err);
+        console.log(err);
     }
 };
 
@@ -78,7 +78,7 @@ export const updateUserById = async (req, res, next) => {
         await userResponse.update(req.body);
         return res.status(200).json({ success: true });
     } catch (err) {
-        next(err);
+        console.log(err);
     }
 };
 
@@ -97,6 +97,6 @@ export const deleteUserById = async (req, res, next) => {
 
         return res.status(204).send();
     } catch (err) {
-        next(err);
+        console.log(err);
     }
 };
