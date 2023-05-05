@@ -1,0 +1,54 @@
+{
+  "user": [
+    {
+      "user_id": 1,
+      "first_name": "Ionescu",
+      "last_name": "Vlad",
+      "email": "ionescu.vlad@s.unibuc.ro",
+      "password": 1234,
+      "is_admin": false,
+      "github_account": "https://github.com/Nubaz"
+    },
+    {
+      "user_id": 2,
+      "first_name": "Popescu",
+      "last_name": "Ion",
+      "email": "popescu.ion@fmi.unibuc.ro",
+      "password": 1234,
+      "is_admin": false,
+      "github_account": "https://github.com/mcmarius"
+    }
+  ],
+  "professor": [
+    {
+      "user_id": 2,
+      "professor_id": 1,
+      "professor_type": "laborant"
+    }
+  ],
+  "student": [
+    {
+      "user_id": 1,
+      "student_id": 1,
+      "study_year": 2,
+      "study_group": "261"
+    }
+  ],
+  "class": [
+    {
+      "class_id": 1,
+      "name": "POO",
+      "description": "Programare Orientată pe Obiecte",
+      "study_year": 2
+    }
+  ],
+  "student_professor_class": [
+    {
+      "professor_id": 1,
+      "student_id": 1,
+      "class_id": 1
+    }
+  ],
+  "project": [
+  ]
+}
