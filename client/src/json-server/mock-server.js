@@ -8,25 +8,28 @@ import cookieParser from 'cookie-parser';
 import redis from 'redis';
 import RedisStore from 'connect-redis';
 
+// JSON-server config
 const server = jsonServer.create();
-const router = jsonServer.router('./mock_db.json');
+const router = jsonServer.router('./mock-db.json');
 const middlewares = jsonServer.defaults({"logger": false});
 
+// Dotenv config
 const __dirname = dirname(fileURLToPath(import.meta.url));
 dotenv.config({
     path: resolve(__dirname + '../../../../.env'),
 });
 const backendLink = `http://${process.env.DOMAIN}:${process.env.BACKEND_PORT}`;
 
+// JSON-server steup
 server.use(middlewares);
+server.use(cookieParser());
+server.use(jsonServer.bodyParser);
 server.use(
     cors({
         origin: `http://${process.env.DOMAIN}:${process.env.FRONTEND_PORT}`,
         credentials: true,
     })
 );
-server.use(cookieParser());
-server.use(jsonServer.bodyParser);
 server.use(
     session({
         secret: process.env.SESSION_SECRET,
@@ -36,17 +39,15 @@ server.use(
     })
 )
 
+// Redis setup
 const redisClient = redis.createClient({
     host: process.env.REDIS_HOST,
     port: process.env.REDIS_PORT,
 });
-
 redisClient.connect().catch(console.error);
-
 redisClient.on('connect', () => {
     console.log('Connected to Redis');
 });
-
 redisClient.on('error', (err) => {
     console.error('Redis error: ' + err);
 });
@@ -56,7 +57,10 @@ const redisStore = new RedisStore({
     prefix: 'fmiappsid:',
 });
 
-server.get('/api/users/is-current-user', async (req, res) => {
+// ----------- MOCK APIs -----------
+// -------- AUTHENTICATION --------
+// Check whether user is logged in or not
+server.get('/api/auth/is-current-user', async (req, res) => {
     try {
         await redisStore.get(req.sessionID, (_, data) => {
             if (data) {
@@ -70,6 +74,7 @@ server.get('/api/users/is-current-user', async (req, res) => {
     }
 });
 
+// User login
 server.post('/api/auth/login-email', async (req, res) => {
     try {
         let hour = 3600000;
@@ -79,7 +84,7 @@ server.post('/api/auth/login-email', async (req, res) => {
             req.session.cookie.maxAge = hour / 2; // 30 min
         }
 
-        let userObj = (await fetch(`${backendLink}/user?email=${req.body.email}&password=${req.body.pass}`, {
+        let userObj = (await fetch(`${backendLink}/users?email=${req.body.email}&password=${req.body.pass}`, {
             header: {
                 'Content-Type': 'application/json',
             },
@@ -87,13 +92,13 @@ server.post('/api/auth/login-email', async (req, res) => {
         }).then(res => res.json()))[0];
 
         if (userObj) {
-            let studentObj = (await fetch(`${backendLink}/student?user_id=${userObj['user_id']}`, {
+            let studentObj = (await fetch(`${backendLink}/students?user_id=${userObj['user_id']}`, {
                 header: {
                     'Content-Type': 'application/json',
                 },
                 method: 'GET'
             }).then(res => res.json()));
-            let professorObj = (await fetch(`${backendLink}/professor?user_id=${userObj['user_id']}`, {
+            let professorObj = (await fetch(`${backendLink}/professors?user_id=${userObj['user_id']}`, {
                 header: {
                     'Content-Type': 'application/json',
                 },
@@ -125,6 +130,8 @@ server.post('/api/auth/login-email', async (req, res) => {
     }
 });
 
+// -------- USERS table --------
+// Fetch the data of the logged in user
 server.get('/api/users/current-user', async (req, res) => {
     try {
         await redisStore.get(req.sessionID, (_, data) => {
@@ -135,16 +142,18 @@ server.get('/api/users/current-user', async (req, res) => {
     }
 });
 
-server.get('/api/projects/:id', async (req, res) => {
+// -------- STUDENTS table --------
+// Fetch the PROJECTS data of the logged in student by its ID
+server.get('/api/students/:student_id/projects', async (req, res) => {
     try {
-        const { id } = req.params;
+        const { student_id } = req.params;
 
-        const projectResp = await fetch(`${backendLink}/project?user_id=${id}`, {
+        const projectResp = await fetch(`${backendLink}/projects?student_id=${student_id}`, {
             header: {
                 'Content-Type': 'application/json',
             },
             method: 'GET'
-        }).then(res => res.json())
+        }).then(res => res.json());
 
         if (!projectResp.length) {
             return res.status(404);
@@ -156,34 +165,106 @@ server.get('/api/projects/:id', async (req, res) => {
     }
 });
 
-server.post('/api/projects', async (req, res) => {
-    console.log(req.body)
+// Fetch the CLASSES data of the logged in student by its ID
+server.get('/api/students/:student_id/classes', async (req, res) => {
     try {
-        const projectResp = await fetch(`${backendLink}/project`, {
+        const { student_id } = req.params;
+        let classesArr = [];
+
+        let classes = await fetch(`${backendLink}/students_professors_classes?student_id=${student_id}`, {
             header: {
                 'Content-Type': 'application/json',
             },
-            method: 'POST',
-            body: JSON.stringify(req.body)
-        })
+            method: 'GET'
+        }).then(res => res.json());
+        classes = classes.map(e => e['class_id']);
 
-        res.status(201).json(projectResp);
+        for(let clsId of classes) {
+            let cls = await fetch(`${backendLink}/classes?class_id=${clsId}`, {
+                header: {
+                    'Content-Type': 'application/json',
+                },
+                method: 'GET'
+            }).then(res => res.json());
+
+            classesArr.push(cls[0]);
+        }
+
+        return res.status(200).json(classesArr);
     } catch (err) {
         console.log(err);
     }
 });
 
-server.delete('/api/projects/:id', async (req, res, next) => {
+// Fetch the PROFESSORS data of the logged in student by its ID
+// and the 'professor_type' column
+server.get('/api/students/:student_id/professors/:type', async (req, res) => {
     try {
-        const { id } = req.params;
+        let profsObj = [];
 
-        const projectResponse = await models.Project.destroy({
-            where: { project_id: id },
-        });
+        let profsIds = await fetch(`${backendLink}/students_professors_classes?student_id=${req.params.student_id}`, {
+            header: {
+                'Content-Type': 'application/json', 
+            },
+            method: 'GET'
+        }).then(res => res.json());
+        profsIds = profsIds.map(e => e['professor_id']);
 
-        if (projectResponse === 0) {
-            return res.status(404).json('Project not found');
+        for(let profId of profsIds) {
+            let profData = await fetch(`${backendLink}/professors?professor_id=${profId}&professor_type=${req.params.type}`, {
+                header: {
+                    'Content-Type': 'application/json', 
+                },
+                method: 'GET'
+            }).then(res => res.json());
+            
+            let profUserData = await fetch(`${backendLink}/users?user_id=${profData[0]['user_id']}`, {
+                header: {
+                    'Content-Type': 'application/json',
+                },
+                method: 'GET'
+            }).then(res => res.json());
+
+            profsObj.push(profUserData[0]);
         }
+
+        return res.status(200).json(profsObj);
+    } catch (err) { 
+        console.log(err);
+    }
+});
+
+// -------- PROJECTS table --------
+// Add an entry to the PROJECTS table
+server.post('/api/projects', async (req, res) => {
+    try {
+        console.log(req.body)
+
+        const projectResp = await fetch(`${backendLink}/projects`, {
+            header: {
+                'Content-Type': 'application/json',
+            },
+            method: 'POST',
+            body: JSON.stringify(req.body)
+        }).then(res => res.json());
+
+        res.status(201);
+    } catch (err) {
+        console.log(err);
+    }
+});
+
+// Delete an entry from the PROJECTS table by ID
+server.delete('/api/projects/:project_id', async (req, res, next) => {
+    try {
+        const { project_id } = req.params;
+
+        await fetch(`${backendLink}/projects?project_id=${project_id}`, {
+            header: {
+                'Content-Type': 'application/json',
+            },
+            method: 'DELETE'
+        });
 
         return res.status(204).send();
     } catch (err) {
@@ -191,6 +272,7 @@ server.delete('/api/projects/:id', async (req, res, next) => {
     }
 });
 
+// Start the server
 server.use(router)
 server.listen(process.env.BACKEND_PORT, () => {
     console.log("Starting JSON server...")

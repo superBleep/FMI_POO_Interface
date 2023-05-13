@@ -1,8 +1,7 @@
+import { backendLink } from '../../services/constants';
 import Form from 'react-bootstrap/Form';
 import Button from 'react-bootstrap/Button';
 import FloatingLabel from 'react-bootstrap/FloatingLabel';
-
-const backendLink = `http://${import.meta.env.VITE_DOMAIN}:${import.meta.env.VITE_BACKEND_PORT}`;
 
 async function loginUserEmail(credentials) {
     return fetch(`${backendLink}/api/auth/login-email`, {

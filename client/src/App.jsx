@@ -1,18 +1,15 @@
 import { React, useEffect, useState } from 'react';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
-
-import Dashboard from './pages/Dashboard';
-import Login from './components/Login';
-import { generalStyle } from './services/constants';
-
-const backendLink = `http://${import.meta.env.VITE_DOMAIN}:${import.meta.env.VITE_BACKEND_PORT}`;
+import { backendLink, generalStyle } from './services/constants';
+import Dashboard from './components/main/Dashboard';
+import Login from './components/main/Login';
 
 export default function App() {
     const [loggedIn, setLoggedIn] = useState();
 
     useEffect(() => {
         const fetchCurrentUser = async () => {
-            const resp = await fetch(`${backendLink}/api/users/is-current-user`, {
+            const resp = await fetch(`${backendLink}/api/auth/is-current-user`, {
                 headers: {
                     'Content-Type': 'application/json',
                 },

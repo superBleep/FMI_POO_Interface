@@ -1,6 +1,5 @@
+import { backendLink } from './constants';
 import { useState } from 'react';
-
-const backendLink = `http://${import.meta.env.VITE_DOMAIN}:${import.meta.env.VITE_BACKEND_PORT}`;
 
 export default function useLoggedIn() {
     const getLoggedIn = async () => {
