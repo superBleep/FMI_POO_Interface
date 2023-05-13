@@ -80,9 +80,11 @@ async function getGitHubData(userProjects, userData) {
         // Calculate the difference between the current date
         // and the date of the last comment
         let comments = (await octokit.request(`GET ${commentsURL}`)).data;
-        let commentDate = new Date(comments[comments.length - 1].updated_at);
-        let currentDate = new Date();
-        project.outdated = Math.round((currentDate.getTime() - commentDate.getTime()) / (1000 * 3600 * 24));
+        if(comments.length) {
+            let commentDate = new Date(comments[comments.length - 1].updated_at);
+            let currentDate = new Date();
+            project.outdated = Math.round((currentDate.getTime() - commentDate.getTime()) / (1000 * 3600 * 24));    
+        }
 
         // Fetch all professors with type 'lab'
         // assigned to the student
@@ -108,7 +110,7 @@ async function getGitHubData(userProjects, userData) {
     return await Promise.all(newProjects);
 }
 
-export default function StudentIndex() {
+export default function StudentIndex({ setLoggedIn }) {
     const [userData, setUserData] = useState();
     const [projects, setProjects] = useState();
     const [classes, setClasses] = useState();
@@ -119,6 +121,7 @@ export default function StudentIndex() {
 
     const [change, setChange] = useState(false);
 
+    // Fetch/modify student data
     useEffect(() => {
         const getStudentData = async () => {
             const resp = await fetch(`${backendLink}/api/users/current-user`, {
@@ -182,7 +185,7 @@ export default function StudentIndex() {
         if(classes) {
             return classes.map(cls => {
                 return (
-                    <option key={cls.class_id} value={cls.class_id}>{cls.name}</option>
+                    <option key={cls.class_id}>{cls.name}</option>
                 )
             });
         }
@@ -297,6 +300,8 @@ export default function StudentIndex() {
         change ? setChange(false) : setChange(true);
     };
 
+    // Set project to be modified
+    // and show the modify project modal
     const editModal = (project) => {
         setSelProject(project[0]);
         handleShow3();
@@ -327,6 +332,20 @@ export default function StudentIndex() {
         };
         change ? setChange(false) : setChange(true);
         await editProjectAPI(projectData);
+    }
+
+    // Logout user
+    const logout = async () => {
+        fetch(`${backendLink}/api/auth/logout`, {
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            mode: 'cors',
+            credentials: 'include',
+            method: 'GET'
+        }).then((res) => res);
+
+        setLoggedIn(false);
     }
 
     // Modals and main element
@@ -439,6 +458,8 @@ export default function StudentIndex() {
                     <hr></hr>
                     {listProjects()}
                 </div>
+
+                <Button variant='danger' onClick={logout}>Delogare</Button>
             </div>
         );
     }

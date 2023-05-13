@@ -22,7 +22,7 @@ export default function App() {
         };
 
         fetchCurrentUser();
-    }, []);
+    }, [loggedIn]);
 
     if (!loggedIn) {
         return (
@@ -35,7 +35,7 @@ export default function App() {
             <div style={generalStyle}>
                 <BrowserRouter>
                     <Routes>
-                        <Route path="/" element={<Dashboard />} />
+                        <Route path="/*" element={<Dashboard loggedIn={loggedIn} setLoggedIn={ setLoggedIn }/>} />
                     </Routes>
                 </BrowserRouter>
             </div>

@@ -7,7 +7,10 @@
       "email": "ionescu.vlad@s.unibuc.ro",
       "password": "1234",
       "is_admin": false,
-      "github_account": "https://github.com/Nubaz"
+      "github_account": "https://github.com/Nubaz",
+      "student_id": 1,
+      "study_year": 2,
+      "study_group": "261"
     },
     {
       "user_id": 2,
@@ -23,7 +26,13 @@
     {
       "user_id": 2,
       "professor_id": 1,
-      "professor_type": "lab"
+      "professor_type": "lab",
+      "first_name": "Popescu",
+      "last_name": "Ion",
+      "email": "popescu.ion@fmi.unibuc.ro",
+      "password": "1234",
+      "is_admin": false,
+      "github_account": "https://github.com/mcmarius"
     }
   ],
   "students": [
@@ -51,11 +60,18 @@
   ],
   "projects": [
     {
-      "project_id": 1,
       "student_id": 1,
-      "class_id": 1,
+      "class_id": "1",
+      "name": "Test",
+      "github_link": "https://github.com/Nubaz/FMI_POO_Interface",
+      "project_id": 1
+    },
+    {
+      "student_id": 1,
+      "class_id": "POO",
       "name": "Randomizer!",
-      "github_link": "https://github.com/Nubaz/Randomizer_Game"
+      "github_link": "https://github.com/Nubaz/Randomizer_Game",
+      "project_id": 2
     }
   ]
 }
