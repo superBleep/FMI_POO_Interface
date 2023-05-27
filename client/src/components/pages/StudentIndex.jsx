@@ -19,7 +19,7 @@ const octokit = new Octokit({
 // elapsed from the last professor comment
 // on the latest commit (main branch)
 function outdatedColor(nrDays) {
-    if(nrDays) {
+    if(nrDays >= 0) {
         let dayPercent = 255 * 0.1;
         let red = 0, green = 255;
     
@@ -37,7 +37,9 @@ function outdatedColor(nrDays) {
         let colorString = ['#', red, green, '00'].join('');
         return {backgroundColor: colorString, color: 'black'};
     }
-    else
+    else if(nrDays == -1) {
+        return {backgroundColor: '#A0A0A0', color: 'black'};
+    } else
         return {backgroundColor: '#00FF00', color: 'black'};
 }
 
@@ -84,6 +86,8 @@ async function getGitHubData(userProjects, userData) {
             let commentDate = new Date(comments[comments.length - 1].updated_at);
             let currentDate = new Date();
             project.outdated = Math.round((currentDate.getTime() - commentDate.getTime()) / (1000 * 3600 * 24));    
+        } else {
+            project.outdated = -1;
         }
 
         // Fetch all professors with type 'lab'
@@ -170,6 +174,7 @@ export default function StudentIndex({ setLoggedIn }) {
             getClasses();
         };
         getStudentData();
+
     }, [change]);
 
     const handleClose = () => setShow(false);
@@ -185,7 +190,7 @@ export default function StudentIndex({ setLoggedIn }) {
         if(classes) {
             return classes.map(cls => {
                 return (
-                    <option key={cls.class_id}>{cls.name}</option>
+                    <option key={cls.class_id} id={"p-cls-" + cls.class_id}>{cls.name}</option>
                 )
             });
         }
@@ -203,6 +208,7 @@ export default function StudentIndex({ setLoggedIn }) {
                             <th>Nume</th>
                             <th>Link</th>
                             <th>Starred</th>
+                            <th>Materie</th>
                             <th>Observații</th>
                             <th>Outdated</th>
                             <th></th>
@@ -219,17 +225,24 @@ export default function StudentIndex({ setLoggedIn }) {
                                 if (project.observations) var obs = project.observations;
                                 else var obs = '-';
 
+                                if (project.outdated == -1) {
+                                    var outdated = <div className="outdated" style={outdatedColor(project.outdated)}>
+                                        <span>Necomentat</span>
+                                    </div>
+                                } else {
+                                    var outdated = <div className="outdated" style={outdatedColor(project.outdated)}>
+                                        <span>{project.outdated} zile</span>
+                                    </div>
+                                }
+                            
                                 return (
                                     <tr key={project.project_id}>
                                         <td>{project.name}</td>
                                         <td><a href={project.github_link} target="blank">{project.github_link}</a></td>
                                         <td>{star}</td>
+                                        <td>{classes.filter(e => e.class_id = project.class_id)[0].name}</td>
                                         <td>{obs}</td>
-                                        <td>
-                                            <div id="outdated" style={outdatedColor(9)}>
-                                                <span>{project.outdated} zile</span>
-                                            </div>
-                                        </td>
+                                        <td>{outdated}</td>
                                         <td>
                                             <div className='d-flex gap-2'>
                                                 <Button variant="danger" title="Șterge proiectul" onClick={deletionModal.bind(this, [project])} className="w-100">
@@ -270,7 +283,7 @@ export default function StudentIndex({ setLoggedIn }) {
 
         const projectData = {
             student_id: userData.user_id,
-            class_id: event.target.formProjectClass.value,
+            class_id: classes.filter(e => e.name = event.target.formProjectClass.value)[0].class_id,
             name: event.target.formProjectName.value,
             github_link: event.target.formProjectLink.value
         };
@@ -312,7 +325,6 @@ export default function StudentIndex({ setLoggedIn }) {
         handleClose3();
 
         const editProjectAPI = async (projectData) => {
-            console.log(projectData.project_id)
             return fetch(`${backendLink}/api/projects/${projectData.project_id}`, {
                 headers: {
                     'Content-Type': 'application/json',
@@ -377,8 +389,8 @@ export default function StudentIndex({ setLoggedIn }) {
                             </Form.Group>
                             <Form.Group controlId="formProjectClass" style={{ marginTop: '1em' }}>
                                 <Form.Label>Materia proiectului</Form.Label>
-                                <Form.Select>
-                                    <option selected disabled>Selectează materia</option>
+                                <Form.Select defaultValue={"placeholder"}>
+                                    <option value="placeholder" disabled>Selectează materia</option>
                                     {listClasses()}
                                 </Form.Select>
                             </Form.Group>
@@ -435,8 +447,8 @@ export default function StudentIndex({ setLoggedIn }) {
                             </Form.Group>
                             <Form.Group controlId="formProjectClass" style={{ marginTop: '1em' }}>
                                 <Form.Label>Materia proiectului</Form.Label>
-                                <Form.Select>
-                                    <option selected disabled>Selectează materia</option>
+                                <Form.Select defaultValue={"placeholder"}>
+                                    <option value="placeholder" disabled>Selectează materia</option>
                                     {listClasses()}
                                 </Form.Select>
                             </Form.Group>

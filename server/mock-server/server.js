@@ -158,7 +158,7 @@ app.get('/api/students/:student_id/projects', async (req, res) => {
             if(project.student_id == req.params.student_id)
                 projects.push(project);
         }
-
+        
         if(!projects.length) return res.status(404);
         return res.status(200).json(projects);
     } catch(err) {
@@ -227,7 +227,7 @@ app.post('/api/projects', async (req, res) => {
         db.data.projects.push(req.body);
         await db.write();
 
-        res.status(201);
+        res.status(201).json();
     } catch (err) {
         console.log(err);
     }
