@@ -4,32 +4,32 @@ import StudentIndex from '../pages/StudentIndex';
 import ProfessorIndex from '../pages/ProfessorIndex';
 import { backendLink } from '../../services/constants';
 
-export default function Dashboard({ loggedIn, setLoggedIn }) {
+export default function Dashboard({ setLoggedIn }) {
     const [userData, setUserData] = useState();
 
-    if(loggedIn) {
-        useEffect(() => {
-            const getUserData = async() => {
-                const resp = await fetch(`${backendLink}/api/users/current-user`, {
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    mode: 'cors',
-                    credentials: 'include',
-                    method: 'GET',
-                });
-            
-                let asyncUserData = Object.values(await resp.json())[1];
-                if(asyncUserData)
-                    setUserData(asyncUserData);
-            } 
-            getUserData();
+    
+    const getUserData = async() => {
+        const resp = await fetch(`${backendLink}/api/users/current-user`, {
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            mode: 'cors',
+            credentials: 'include',
+            method: 'GET',
         });
     
-        if(userData) {
-            if(userData['student_id']) return <StudentIndex setLoggedIn={setLoggedIn}/>;
-            if(userData['professor_id']) return <ProfessorIndex setLoggedIn={setLoggedIn}/>;
-        }
+        let asyncUserData = Object.values(await resp.json())[1];
+        if(asyncUserData)
+            setUserData(asyncUserData);
+    }
+
+    useEffect(() => {
+        getUserData();
+    }, []);
+
+    if(userData) {
+        if(userData['student_id']) return <StudentIndex setLoggedIn={setLoggedIn}/>;
+        if(userData['professor_id']) return <ProfessorIndex setLoggedIn={setLoggedIn}/>;
     }
 }
 

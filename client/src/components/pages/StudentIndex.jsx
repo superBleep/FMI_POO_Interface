@@ -2,12 +2,13 @@ import { Octokit } from '@octokit-next/core';
 import { React, useEffect, useState } from 'react';
 import '../../css/StudentIndex.css';
 import { octokitHeaders, backendLink } from '../../services/constants';
+import { projectStatusText } from '../../services/StudentIndex/projectStatus';
 import Button from 'react-bootstrap/Button';
 import Modal from 'react-bootstrap/Modal';
 import Form from 'react-bootstrap/Form';
 import Table from 'react-bootstrap/Table';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faStar, faPlus, faTrashCan, faPen } from '@fortawesome/free-solid-svg-icons';
+import { faStar, faPlus, faTrashCan, faPen, faCheck } from '@fortawesome/free-solid-svg-icons';
 import { faStar as faRStar } from '@fortawesome/free-regular-svg-icons';
 
 // GitHub API config
@@ -15,40 +16,13 @@ const octokit = new Octokit({
     auth: import.meta.env.GITHUB_TOKEN
 });
 
-// Change bg color of time (in days)
-// elapsed from the last professor comment
-// on the latest commit (main branch)
-function outdatedColor(nrDays) {
-    if(nrDays >= 0) {
-        let dayPercent = 255 * 0.1;
-        let red = 0, green = 255;
-    
-        red += Math.round(nrDays * dayPercent);
-        green -= Math.round(nrDays * dayPercent);
-    
-        if(red > 255)
-            red = 255
-        if(green < 0)
-            green = 0
-    
-        red = red.toString(16).padStart(2, '0');
-        green = green.toString(16).padStart(2, '0');
-
-        let colorString = ['#', red, green, '00'].join('');
-        return {backgroundColor: colorString, color: 'black'};
-    }
-    else if(nrDays == -1) {
-        return {backgroundColor: '#A0A0A0', color: 'black'};
-    } else
-        return {backgroundColor: '#00FF00', color: 'black'};
-}
-
 // Pull data from GitHub API
 async function getGitHubData(userProjects, userData) {
     userProjects.map(project => {
         Object.assign(project, {
             starred: false,
-            outdated: 0
+            outdatedProject: 0,
+            outdatedFeedback: 0
         });
     })
 
@@ -57,6 +31,7 @@ async function getGitHubData(userProjects, userData) {
         let owner = matches[1];
         let repo = matches[2];
 
+        // --------- STARRED ---------
         // Fetch all stargazers on the repo
         let stargazers = (await octokit.request(`GET /repos/${owner}/${repo}/stargazers`, {
             owner: owner,
@@ -64,34 +39,8 @@ async function getGitHubData(userProjects, userData) {
             headers: octokitHeaders
         })).data;
 
-        // Fetch the default branch on the repo
-        let defaultBranch = (await octokit.request(`GET /repos/${owner}/${repo}`, {
-            owner: owner,
-            repo: repo,
-            headers: octokitHeaders
-        })).data.default_branch;
-
-        // Fetch comments on the default branch
-        let commentsURL = (await octokit.request(`GET /repos/${owner}/${repo}/branches/${defaultBranch}`, {
-            owner: owner,
-            repo: repo,
-            branch: defaultBranch,
-            headers: octokitHeaders
-        })).data.commit.comments_url;
-
-        // Calculate the difference between the current date
-        // and the date of the last comment
-        let comments = (await octokit.request(`GET ${commentsURL}`)).data;
-        if(comments.length) {
-            let commentDate = new Date(comments[comments.length - 1].updated_at);
-            let currentDate = new Date();
-            project.outdated = Math.round((currentDate.getTime() - commentDate.getTime()) / (1000 * 3600 * 24));    
-        } else {
-            project.outdated = -1;
-        }
-
-        // Fetch all professors with type 'lab'
-        // assigned to the student
+        // Fetch (from the DB) all professors
+        // with type 'lab' assigned to the student
         let labs = await fetch(`${backendLink}/api/students/${userData.student_id}/professors/lab`, {
             header: {
                 'Content-Type': 'application/json'
@@ -108,6 +57,69 @@ async function getGitHubData(userProjects, userData) {
                 if(user.login == lab)
                     project.starred = true;
 
+        // --------- FEEDBACK ---------
+        // Fetch the last comment on the repo
+        let allComments = (await octokit.request(`GET /repos/${owner}/${repo}/comments`, {
+            owner: owner,
+            repo: repo,
+            headers: octokitHeaders
+        }));
+
+        let lastComment = allComments.data;
+
+        // Check if there are no comments on the repo
+        if(!lastComment.length) {
+            project.outdatedProject = -1;
+            project.outdatedFeedback = -1;
+
+            return project;
+        }
+
+        for(let e of allComments.headers.link.split(", ")) {
+            let link = e.match("(?<=<).*?(?=>)")[0];
+            lastComment = lastComment.concat((await octokit.request(link)).data);
+        }
+        lastComment = lastComment[lastComment.length - 1];
+
+        // Fetch the last commit on the repo
+        let events = (await octokit.request('GET /repos/{owner}/{repo}/events', {
+            owner: owner,
+            repo: repo,
+            headers: octokitHeaders
+        })).data;
+
+        let lastCommit = events.find(e => e.type == "PushEvent");
+
+        if(!lastCommit) {
+            project.outdatedProject = -3;
+            project.outdatedFeedback = -3;
+
+            return project;
+        }
+
+        // Outdated project (no commits since last feedback)
+        if(lastComment.commit_id == lastCommit.payload.commits[0].sha) {
+            project.outdatedFeedback = -2;
+
+            let commentDate = newDate(lastComment.updated_at);
+            let currentDate = new Date();
+            project.outdatedProject = Math.round((currentDate.getTime() - commentDate.getTime()) / (1000 * 3600 * 24));
+        }
+        // Outdated feedback (one or more commits since last feedback)
+        else {
+            project.outdatedProject = -2;
+
+            let commentDate = new Date(lastComment.updated_at);
+            let commitDate = new Date ((await octokit.request(`GET /repos/${owner}/${repo}/commits/${lastCommit.payload.commits[0].sha}`, {
+                owner: owner,
+                repo: repo,
+                ref: lastCommit.payload.commits[0].sha,
+                headers: octokitHeaders
+            })).data.commit.author.date);
+
+            project.outdatedFeedback = Math.round((commitDate.getTime() - commentDate.getTime()) / (1000 * 3600 * 24));;
+        }
+
         return project;
     })
 
@@ -123,60 +135,58 @@ export default function StudentIndex({ setLoggedIn }) {
     const [show3, setShow3] = useState(false); // modify project modal
     const [selProject, setSelProject] = useState('blank'); // project to be deleted/modified
 
-    const [change, setChange] = useState(false);
-
     // Fetch/modify student data
-    useEffect(() => {
-        const getStudentData = async () => {
-            const resp = await fetch(`${backendLink}/api/users/current-user`, {
+    const getStudentData = async () => {
+        const resp = await fetch(`${backendLink}/api/users/current-user`, {
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            mode: 'cors',
+            credentials: 'include',
+            method: 'GET',
+        });
+
+        let asyncUserData = Object.values(await resp.json())[1];
+        setUserData(asyncUserData);
+
+        const getStudentProjects = async () => {
+            const resp = await fetch(`${backendLink}/api/students/${asyncUserData.student_id}/projects`, {
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 mode: 'cors',
                 credentials: 'include',
-                method: 'GET',
+                method: 'GET'
             });
 
-            let asyncUserData = Object.values(await resp.json())[1];
-            setUserData(asyncUserData);
+            let userProjects = {};
+            if (resp.status == 200) {
+                userProjects = await getGitHubData(await resp.json(), asyncUserData);
+            }
 
-            const getStudentProjects = async () => {
-                const resp = await fetch(`${backendLink}/api/students/${asyncUserData.student_id}/projects`, {
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    mode: 'cors',
-                    credentials: 'include',
-                    method: 'GET'
-                });
-
-                let userProjects = {};
-                if (resp.status == 200) {
-                    userProjects = await getGitHubData(await resp.json(), asyncUserData);
-                }
-
-                setProjects(userProjects);
-            };
-            getStudentProjects();
-
-            const getClasses = async () => {
-                const resp = await fetch(`${backendLink}/api/students/${asyncUserData.user_id}/classes`, {
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    mode: 'cors',
-                    credentials: 'include',
-                    method: 'GET'
-                });
-
-                setClasses(await resp.json());
-            };
-            getClasses();
+            setProjects(userProjects);
         };
+        getStudentProjects();
+
+        const getClasses = async () => {
+            const resp = await fetch(`${backendLink}/api/students/${asyncUserData.user_id}/classes`, {
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                mode: 'cors',
+                credentials: 'include',
+                method: 'GET'
+            });
+
+            setClasses(await resp.json());
+        };
+        getClasses();
+    };
+
+    useEffect(() => {
         getStudentData();
-
-    }, [change]);
-
+    }, [])
+    
     const handleClose = () => setShow(false);
     const handleShow = () => setShow(true);
     const handleClose2 = () => setShow2(false);
@@ -210,7 +220,8 @@ export default function StudentIndex({ setLoggedIn }) {
                             <th>Starred</th>
                             <th>Materie</th>
                             <th>Observații</th>
-                            <th>Outdated</th>
+                            <th>Ultimul update</th>
+                            <th>Ultimul feedback</th>
                             <th></th>
                         </tr>
                     </thead>
@@ -224,16 +235,6 @@ export default function StudentIndex({ setLoggedIn }) {
 
                                 if (project.observations) var obs = project.observations;
                                 else var obs = '-';
-
-                                if (project.outdated == -1) {
-                                    var outdated = <div className="outdated" style={outdatedColor(project.outdated)}>
-                                        <span>Necomentat</span>
-                                    </div>
-                                } else {
-                                    var outdated = <div className="outdated" style={outdatedColor(project.outdated)}>
-                                        <span>{project.outdated} zile</span>
-                                    </div>
-                                }
                             
                                 return (
                                     <tr key={project.project_id}>
@@ -242,7 +243,8 @@ export default function StudentIndex({ setLoggedIn }) {
                                         <td>{star}</td>
                                         <td>{classes.filter(e => e.class_id = project.class_id)[0].name}</td>
                                         <td>{obs}</td>
-                                        <td>{outdated}</td>
+                                        <td>{projectStatusText(project.outdatedProject)}</td>
+                                        <td>{projectStatusText(project.outdatedFeedback)}</td>
                                         <td>
                                             <div className='d-flex gap-2'>
                                                 <Button variant="danger" title="Șterge proiectul" onClick={deletionModal.bind(this, [project])} className="w-100">
@@ -287,8 +289,8 @@ export default function StudentIndex({ setLoggedIn }) {
             name: event.target.formProjectName.value,
             github_link: event.target.formProjectLink.value
         };
-        change ? setChange(false) : setChange(true);
         await postProjectAPI(projectData);
+        getStudentData();
     };
 
     // Set project to be deleted
@@ -310,7 +312,7 @@ export default function StudentIndex({ setLoggedIn }) {
         }).then((res) => res);
 
         handleClose2();
-        change ? setChange(false) : setChange(true);
+        getStudentData();
     };
 
     // Set project to be modified
@@ -342,8 +344,8 @@ export default function StudentIndex({ setLoggedIn }) {
             name: event.target.formProjectName.value,
             github_link: event.target.formProjectLink.value
         };
-        change ? setChange(false) : setChange(true);
         await editProjectAPI(projectData);
+        getStudentData();
     }
 
     // Logout user

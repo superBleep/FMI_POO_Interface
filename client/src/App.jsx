@@ -35,7 +35,7 @@ export default function App() {
             <div style={generalStyle}>
                 <BrowserRouter>
                     <Routes>
-                        <Route path="/*" element={<Dashboard loggedIn={loggedIn} setLoggedIn={ setLoggedIn }/>} />
+                        <Route path="/*" element={<Dashboard setLoggedIn={ setLoggedIn }/>} />
                     </Routes>
                 </BrowserRouter>
             </div>
