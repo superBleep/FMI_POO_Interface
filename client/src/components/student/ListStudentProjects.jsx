@@ -1,3 +1,5 @@
+import Table from 'react-bootstrap/esm/Table.js';
+import Button from 'react-bootstrap/esm/Button';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faStar as faRStar } from '@fortawesome/free-regular-svg-icons';
 import { faPen, faStar, faTrashCan, faCheck } from '@fortawesome/free-solid-svg-icons';
@@ -24,7 +26,7 @@ export function outdatedColor(nrDays) {
         let colorString = ['#', red, green, '00'].join('');
         return {backgroundColor: colorString, color: 'black'};
     }
-    else if(nrDays == -1 || nrDays == -3) {
+    else if(nrDays == -1 || nrDays == -3 || nrDays == -2) {
         return {backgroundColor: '#A0A0A0', color: 'black'};
     } else
         return {backgroundColor: '#00FF00', color: 'black'};
@@ -60,9 +62,9 @@ export function projectStatusText(time) {
     return text;
 }
 
-export function listStudentProjects(projects) {
+export function ListStudentProjects(props) {
     // Return a message if there are no projects
-    if(!Object.keys(projects).length)
+    if(!Object.keys(props.projects).length)
         return <p id='noProject'>Nu ai niciun proiect adăugat. Adaugă un proiect cu butonul de mai sus.</p>;
     else return (
         <Table style={{ color: 'white', textAlign: 'center'}}>
@@ -80,7 +82,7 @@ export function listStudentProjects(projects) {
             </thead>
             <tbody>
                 {
-                    projects.forEach(p => {
+                    props.projects.map(p => {
                         if(p.starred) var star = <FontAwesomeIcon icon={faStar} style={{ color: '#ffff00' }} />;
                         else var star = <FontAwesomeIcon icon={faRStar} />;
 
@@ -92,16 +94,16 @@ export function listStudentProjects(projects) {
                                 <td>{p.name}</td>
                                 <td><a href={p.github_link} target='blank'>{p.github_link}</a></td>
                                 <td>{star}</td>
-                                <td>{studentClasses.filter(c => c.class_id = p.class_id)[0].name}</td>
+                                <td>{props.studentClasses.filter(c => c.class_id = p.class_id)[0].name}</td>
                                 <td>{obs}</td>
                                 <td>{projectStatusText(p.outdatedProject)}</td>
                                 <td>{projectStatusText(p.outdatedFeedback)}</td>
                                 <td>
                                     <div className='d-flex gap-2'>
-                                        <Button variant='danger' title='Șterge proiectul' className='w-100'>
+                                        <Button variant='danger' title='Șterge proiectul' className='w-100' onClick={() => {props.setSelectedProj(p); props.hShowDel();}}>
                                             <FontAwesomeIcon icon={faTrashCan} />
                                         </Button>
-                                        <Button variant='success' title='Editează proiectul' className='w-100'>
+                                        <Button variant='success' title='Editează proiectul' className='w-100' onClick={() => {props.setSelectedProj(p); props.hShowUp();}}>
                                             <FontAwesomeIcon icon={faPen} />
                                         </Button>
                                     </div>

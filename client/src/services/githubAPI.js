@@ -47,11 +47,12 @@ export default async function getGitHubData(projects, student_id) {
                     p.starred = true;
 
         // --------- FEEDBACK ---------
-        // Fetch the last comment on the repo
-        let comments = (await octokit.request(`GET /repos/${owner}/${repo}/comments`, reqParams)).data;
+        // Fetch the first page of comments on the repo
+        let comments = (await octokit.request(`GET /repos/${owner}/${repo}/comments`, reqParams));
+        let commentsData = comments.data;
 
         // Check if there are no comments on the repo
-        if(!comments.length) {
+        if(!commentsData.length) {
             p.outdatedProject = -1;
             p.outadatedFeedback = -1;
 
@@ -62,19 +63,26 @@ export default async function getGitHubData(projects, student_id) {
         // and merge it into a single array
         for(let c of comments.headers.link.split(", ")) {
             let link = c.match('(?<=<).*?(?=>)')[0];
-            comments = comments.concat((await octokit.request(link)).data);
+            commentsData = commentsData.concat((await octokit.request(link)).data);
         }
 
         // Get the last comment on the repo
-        const lastComment = comments[comments.length - 1];
+        const lastComment = commentsData[commentsData.length - 1];
 
         // Get the last commit on the repo
         const events = (await octokit.request(`GET /repos/${owner}/${repo}/events`, reqParams)).data;
-        const lastCommit = events.find(e => e.type = 'PushEvent');
+        let lastCommit;
+        for(let e of events) {
+            if(e.type == 'PushEvent')
+                if(e.payload) {
+                    lastCommit = e;
+                    break;
+                }
+        }
 
         // GitHUb API only returns events made in the last 90 days
         if(!lastCommit) {
-            p.oudatedProject = -2;
+            p.outdatedProject = -2;
             p.outdatedFeedback = -2;
 
             return p;

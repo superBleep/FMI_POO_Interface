@@ -225,8 +225,8 @@ app.post('/api/projects', async (req, res) => {
         
         Object.assign(req.body, {"project_id": projectId});
         db.data.projects.push(req.body);
+        
         await db.write();
-
         res.status(201).json();
     } catch (err) {
         console.log(err);
@@ -241,9 +241,25 @@ app.delete('/api/projects/:project_id', async (req, res, next) => {
         }
 
         db.data.projects.splice(db.data.projects.findIndex(toBeDeleted), 1);
-        db.write();
+        
+        await db.write();
+        res.status(204).json();
+    } catch (err) {
+        console.log(err);
+    }
+});
 
-        return res.status(204);
+// Update an entry from the PROJECTS table by ID
+app.put('/api/projects/:project_id', async (req, res, next) => {
+    try {
+        const projectId = req.params.project_id;
+        const i = db.data.projects.findIndex(p => p.project_id == projectId);
+        Object.assign(req.body, {"project_id": projectId});
+
+        db.data.projects[i] = req.body;
+
+        await db.write();
+        res.status(200).json();
     } catch (err) {
         console.log(err);
     }

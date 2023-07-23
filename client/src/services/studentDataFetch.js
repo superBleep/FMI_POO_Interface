@@ -10,7 +10,7 @@ export async function getStudentData() {
         credentials: 'include',
         method: 'GET',
     });
-    
+
     return (await resp.json()).userData;
 }
 

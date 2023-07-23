@@ -60,10 +60,18 @@
   ],
   "projects": [
     {
+      "student_id": 1,
       "class_id": 1,
-      "name": "Randomizer!",
-      "github_link": "https://github.com/Nubaz/Randomizer_Game",
+      "name": "Asteroids",
+      "github_link": "https://github.com/theo543/asteroids",
       "project_id": 1
+    },
+    {
+      "student_id": 1,
+      "class_id": 1,
+      "name": "Randomizer",
+      "github_link": "https://github.com/Nubaz/Randomizer_Game",
+      "project_id": "2"
     }
   ]
 }

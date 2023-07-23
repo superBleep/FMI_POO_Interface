@@ -22,14 +22,15 @@ export default function AddProject(props) {
         event.preventDefault();
 
         const projectData = {
-            student_id: props.student_id,
+            student_id: props.studentId,
             class_id: props.studentClasses.filter(c => c.name = event.target.formProjectClass.value)[0].class_id,
             name: event.target.formProjectName.value,
             github_link: event.target.formProjectLink.value,
         }
 
         await postAPI(projectData);
-    } 
+        props.setRefresh(!props.refresh);
+    }
 
     function listStudentClasses() {
         if(Object.keys(props.studentClasses).length) {
